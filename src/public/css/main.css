@@ -1,0 +1,81 @@
+.primary-coloraa {
+    color:#b388ff;
+}
+
+.secondary-color {
+    color:white
+}
+
+body {
+    background-color: #363636;
+    color:#b388ff;
+}
+
+  /* label color */
+.input-field label {
+    color: #b388ff;
+}
+
+.input-field input[type=text],input[type=email],input[type=password]{
+    color:white;
+}
+
+  /* label focus color */
+.input-field input[type=email]:focus + label,input[type=password]:focus + label {
+    color: #b388ff !important;
+}
+/* label underline focus color */
+.input-field input[type=email]:focus,input[type=password]:focus {
+    border-bottom: 1px solid #b388ff !important;
+    box-shadow: 0 1px 0 0 #b388ff !important;
+}
+
+.input-field > input[type=email]:focus {
+    border-bottom: 1px solid #b388ff;
+    box-shadow: 0 1px 0 0 #b388ff;
+}
+
+@media (min-width: 600px) {
+    #toast-container {
+        top: auto !important;
+        right: auto !important;
+        bottom: 10%;
+        left:75%;
+        user-select: none; /* Standard */
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+}
+
+@media (max-width: 600px) {
+    #toast-container  {
+        min-width: 70%;
+        top: 30%;
+        right: 50%;
+        transform: translateX(50%) translateY(40%);
+        user-select: none; /* Standard */
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+}
+
+
+.btn {
+    background-color: #9e66ff;
+}
+
+.btn:hover {
+    background-color:#b388ff
+}
+
+.copyable-field > a {
+    outline: none;
+    position: absolute;
+    left: 90%;
+    top: 25%;
+    color:#b388ff;
+}
+
+.copyable-field > a > .material-icons {
+    font-size: 1.5rem !important;
+}
