@@ -1,9 +1,25 @@
-.primary-coloraa {
-    color:#b388ff;
+.bg-color {
+    background-color: #363636 !important;
+}
+
+.primary-color {
+    background-color:#b388ff !important;
 }
 
 .secondary-color {
-    color:white
+    background-color:white !important;
+}
+
+.primary-color-text {
+    color:white !important;
+}
+
+.secondary-color-text {
+color:#b388ff !important;
+}
+
+.ternary-color-text {
+    color: #363636 !important;
 }
 
 body {
