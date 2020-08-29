@@ -20,6 +20,19 @@
              {{!-- <a id="scanBtn" class="waves-effect waves-light btn modal-trigger" href="#">Scan for subdomains</a> --}}
              {{!-- <a id="addSubdomain" class="waves-effect waves-light btn modal-trigger" href="#add_modal">Add new subdomain</a> --}}
             
+            <div id="card_preloader" class="center-align hide">
+                <div class="preloader-wrapper big active">
+                    <div class="spinner-layer spinner-purple-only">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div><div class="gap-patch">
+                        <div class="circle"></div>
+                    </div><div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                    </div>
+                </div>
+            </div>
             {{#each subdomains}}
             <div class="col s3">   
                 <div class="sub_card card small">
@@ -76,7 +89,7 @@
         </div>
     </div>
     <script>
-        const config = {
+        let config = {
             count: {{count}},
             domainId: "{{domain._id}}",
             maxPage: {{maxPage}},

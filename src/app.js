@@ -6,7 +6,6 @@ const exphs = require("express-handlebars");
 const express = require("express");
 const http = require("http");
 const path = require("path");
-const puppeteer = require("puppeteer");
 const socketio = require("socket.io")
 
 const app = express();

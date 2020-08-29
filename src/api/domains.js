@@ -10,6 +10,8 @@ const Domain = require("../models/domain");
 const Subdomain = require("../models/subdomain");
 const toolQueue = require("../workers/tools");
 const domain = require("../models/domain");
+const { EDESTADDRREQ } = require("constants");
+const e = require("express");
 //toolQueue.empty()
 router.get("/", (req, res) => {
     res.send("at api/home");
@@ -79,11 +81,8 @@ router.get("/all", (req, res) => {
 });
 
 router.use("/id/:domainId", async (req, res, next) => {
-    const domainId = req.params.domainId;
-    
-    let domain;
     try {
-        domain = await Domain.findById(domainId);     
+        res.locals.domain = await Domain.findById(req.params.domainId);     
     }
     catch (e) {
         return res.status(404).json({
@@ -91,7 +90,22 @@ router.use("/id/:domainId", async (req, res, next) => {
             message: "cannot find domain with that id."   
         });
     }
-    res.locals.domain = domain;
+    next();
+});
+
+router.use("/id/:domainId/s/:subdomainId", async (req, res, next) => {
+    try {
+        res.locals.subdomain = await Subdomain.findOne({
+            _id: req.params.subdomainId,
+            rootDomain: res.locals.domain
+        });
+    }
+    catch (e) {
+        return res.status(404).json({
+            success: false,
+            message: "cannot find subdomain with that id"
+        });
+    }
     next();
 });
 
@@ -166,14 +180,21 @@ router.get("/id/:domainId/subdomains", async (req, res) =>  {
     .limit(count)
     .skip(start)
     .exec();
+
+    const maxPage = await Subdomain.find({
+        rootDomain: res.locals.domain, subdomain: (new RegExp(query, "i"))
+    })
+    .count();
     
     res.json({
         domain: res.locals.domain,
+        maxPage,
         subdomains,
         timestamp: Date.now()
     });
 });
 
+//TODO: re-write this function. checking domainId is no longer needed.
 //submit sublist3r job for a given domainId
 router.get("/id/:domainId/subsearch", async (req, res) => {
     const domainId = req.params.domainId;
@@ -210,9 +231,23 @@ router.get("/id/:domainId/subsearch", async (req, res) => {
     }
 });
 
-//submit ispy job for a given domain
-router.get("/id/:domainId/ispy", (req, res) => {
+router.get("/id/:domainId/s/:subdomainId", (req, res) => {
+    res.json({
+        success: true,
+        subdomain: res.locals.subdomain
+    });
+});
 
+//submit ispy job for a given domain
+router.get("/id/:domainId/s/:subdomainId/ispy", async (req, res) => {
+    const newJob = await toolQueue.add("ispy", {
+        subdomain: res.locals.subdomain
+    });
+
+    return res.json({
+        success: true,
+        jobId: newJob.id
+    });
 })
 
 module.exports = router;

@@ -2,12 +2,17 @@ window.onload = () => {
     M.AutoInit();
 
     document.querySelector("#search").addEventListener("input", async (e) => {
+        progress.showPreloader();
         const searchText = document.querySelector("#search").value;
-
-        pagination.updatePageNumber(1);
         const contents = await api.requestNewPage(searchText, 0, config.count);
-        console.log(contents);
+        progress.hidePreloader();
+
+        pagination.setMaxPage(config.maxPage = contents.maxPage);
+        pagination.updatePageNumber(1);
         card.updateCardsFromServerJson(contents);
+
+
+
         // const domainListNodes = document.querySelectorAll("#subdomain_list > a:not(#default_subdomain_item)");
         // if (searchText != "") {
         //     let listEmpty = true;
@@ -51,8 +56,10 @@ async function paginationHandler(ev) {
     else 
         pagination.updatePageNumber(ev.srcElement.innerHTML);
 
+    progress.showPreloader();
     const newPage = pagination.getCurrentPage();
-    const contents = await api.requestNewPage("", (newPage-1)*config.count, config.count);
+    const contents = await api.requestNewPage(document.querySelector("#search").value, (newPage-1)*config.count, config.count);
+    progress.hidePreloader();
     card.updateCardsFromServerJson(contents);
 
 }
@@ -67,15 +74,53 @@ const api = {
 }
 
 const card = {
+    //0-based index
+    toggleVisibility: function(cardNum, visible) {
+        const cards = document.querySelectorAll(".sub_card");
+        if (cards.length > cardNum) {
+            cards[cardNum].classList.toggle("hide", !visible);
+        }
+    },
     updateCardsFromServerJson: function(resp) {
         const sub_card = document.querySelectorAll(".sub_card");
         for (let i = 0; i < sub_card.length; i++) {
             //sub_card[i].childNodes[0].childNodes[0].src = """
-            if (resp.subdomains.length > i)
+            if (resp.subdomains.length > i) {
+                card.toggleVisibility(i, true);
                 sub_card[i].querySelector(".card-content > p").innerHTML = resp.subdomains[i].subdomain;
+            }
             else
-                sub_card[i].querySelector(".card-content > p").innerHTML = "### NOTHING TO SEE ###";
+                card.toggleVisibility(i, false);
         }
+    }
+}
+
+const debounce = {
+    check: function() {
+        return this.locked == undefined ? false : this.locked;
+    },
+    lock: function() {
+        this.locked = true;
+    },
+    unlock: function() {
+        this.locked = false;
+    }
+}
+
+const progress = {
+    showPreloader: function() {
+        const preloader = document.querySelector("#card_preloader");
+        for (let i = 0; i < config.count; i++) 
+            card.toggleVisibility(i, false);
+        preloader.classList.add("active");
+        preloader.classList.remove("hide");
+    },
+    hidePreloader: function() {
+        const preloader = document.querySelector("#card_preloader");
+        for (let i = 0; i < config.count; i++) 
+            card.toggleVisibility(i, false);
+        preloader.classList.add("hide");
+        preloader.classList.remove("active");    
     }
 }
 
@@ -99,6 +144,10 @@ const pagination = {
             element.childNodes[0].classList.add("secondary-color-text");
 
         }
+    },
+    setMaxPage: function (maxPage) {
+        const pli_max = document.querySelector(".pagination > .pli_max");
+        pli_max.childNodes[0].innerHTML = maxPage;
     },
     updatePageNumber: function(pageNum) {
         pageNum = parseInt(pageNum);

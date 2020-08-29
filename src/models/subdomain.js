@@ -2,10 +2,16 @@ const mongoose = require("mongoose");
 
 const SubdomainSchema = new mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
-    subdomain: String,
+    subdomain: {
+        type: String,
+        required: true
+    },
     cname: String,
     a: String,
-    screenshotFilename: String,
+    screenshotFilename: {
+        type: String,
+        default:""
+    },
     serviceProvider: {
         type: String,
         enum: ["heroku", "s3", "wordpress", "cloudfront", "ghpages", "none"],
