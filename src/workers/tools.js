@@ -46,22 +46,22 @@ const toolQueue = new Bull("queue");
     }); 
     
     toolQueue.process("ispy", async (job, done) => {
-        const subdomain = job.data.subdomain;
+        const subdomain = await Subdomain.findById(job.data.subdomainId);
         const page = await browser.newPage();
 
-        let imagePath = path.join(config.imagePath, subdomain.rootDomain);
-        if (!fs.existsSync(imagePath))
-            fs.mkdirSync(imagePath);
+        let fullImagePath = path.join(config.systemRootImagePath, subdomain.rootDomain.toString());
+        if (!fs.existsSync(fullImagePath))
+            fs.mkdirSync(fullImagePath);
 
-        imagePath = path.join(imagePath, `${subdomain.subdomain}.png`);
+        fullImagePath = path.join(fullImagePath, `${subdomain.subdomain}.png`);
 
         await page.goto(`${subdomain.tls_supported?"https":"http"}://${subdomain.subdomain}`);
-        await page.screenshot({path: imagePath});
+        await page.screenshot({path: fullImagePath});
         await page.close();
-        Subdomain.
-        subdomain.screenshotFilename = imagePath;
-        subdomain.markModified("screenshotFilename");
+        
+        subdomain.imagePath = path.join(subdomain.rootDomain.toString(), `${subdomain.subdomain}.png`);
         await subdomain.save();
+        console.log("updated image");
         done();
     });
 })();

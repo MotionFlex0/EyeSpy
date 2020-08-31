@@ -8,7 +8,7 @@ const SubdomainSchema = new mongoose.Schema({
     },
     cname: String,
     a: String,
-    screenshotFilename: {
+    imagePath: {
         type: String,
         default:""
     },

@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-const Domain = require("../models/domain")
-const Subdomain = require("../models/subdomain")
+const Domain = require("../models/domain");
+const Subdomain = require("../models/subdomain");
 
-const config = require("../config/prod")
-
-const SUBDOMAINS_PER_PAGE = 8;
+const config = require("../config/prod");
+const { stringify } = require('uuid');
 
 router.get("/", (req, res) => {
     const script = ["js/dashboard.js"];
@@ -58,14 +57,17 @@ router.get("/domains/:domainId/search", (req, res) => {
             res.render("dashboard/domain_overview", {
                 title: "Domain Overview",
                 count,
-                cardCount: [0,1,2,3,4,5,6,7],
-                currentPage: Math.ceil(start+1/count),
+                cardCount: "0".repeat(count).split(""),
+                initialPage: Math.ceil(start+1/count),
+                initialQuery: query,
+                initialStart: start,
                 maxPage,
                 subdomains,
                 domain,
                 script,
                 css,
-                imagePath: config.imagePath
+                defaultImagePath: config.website.defaultCardImagePath,
+                rootImagePath: config.website.rootImagePath
             });
         });
     })

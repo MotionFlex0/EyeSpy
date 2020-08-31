@@ -7,3 +7,26 @@ input:focus {
     border-bottom: 1px solid #b388ff !important;
     box-shadow: 0 1px 0 0 #b388ff !important;
 }
+
+.card {
+    height: 350px !important;
+}
+
+.card-image > .halfway-fab {
+    bottom: 10px !important;
+    right: 10px !important;
+    /* width: 25px !important;
+    height: 25px !important; */
+}
+
+.card-image > .progress {
+    position: absolute !important;
+    bottom: 120px !important;
+    width: 80%;
+    transform: translate(15%);
+    /* z-index: 0 !important; */
+}
+
+.card-image > .halfway-fab > i {
+    /* font-size: 1rem; */
+}

@@ -34,6 +34,7 @@ const { exit } = require("process");
 app.use(bodyParser.json())
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(config.website.rootImagePath, express.static(config.systemRootImagePath))
 app.set("views", path.join(__dirname, "../views"));
 
 app.engine("hbs", exphs({extname:"hbs"}));

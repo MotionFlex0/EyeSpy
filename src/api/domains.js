@@ -181,10 +181,10 @@ router.get("/id/:domainId/subdomains", async (req, res) =>  {
     .skip(start)
     .exec();
 
-    const maxPage = await Subdomain.find({
+    const maxPage = Math.ceil(await Subdomain.find({
         rootDomain: res.locals.domain, subdomain: (new RegExp(query, "i"))
     })
-    .count();
+    .count()/count);
     
     res.json({
         domain: res.locals.domain,
@@ -241,9 +241,9 @@ router.get("/id/:domainId/s/:subdomainId", (req, res) => {
 //submit ispy job for a given domain
 router.get("/id/:domainId/s/:subdomainId/ispy", async (req, res) => {
     const newJob = await toolQueue.add("ispy", {
-        subdomain: res.locals.subdomain
+        subdomainId: res.locals.subdomain._id
     });
-
+    
     return res.json({
         success: true,
         jobId: newJob.id

@@ -12,7 +12,7 @@
         </div>
         <div class="row">
             <div class="input-field col s6">
-                <input id="search" type="text" class="validate">
+                <input id="search" type="text" class="validate" value="{{initialQuery}}">
                 <label for="search">Search Subdomains</label>
             </div>
         </div>
@@ -33,17 +33,22 @@
                     </div>
                 </div>
             </div>
-            {{#each subdomains}}
+            {{#each cardCount}}
             <div class="col s3">   
-                <div class="sub_card card small">
+                <div class="sub_card card medium">
                     <div class="card-image"> <!-- TODO: use a 2d array prior to being passed here -->
-                        <img class="materialboxed" src="/img/image-not-found.png" data-caption="Test">
+                        <img class="materialboxed" src="" data-caption="Test">
+                        <a class="refresh_image btn-floating halfway-fab waves-effect waves-light green"><i class="material-icons">cached</i></a>
+                         <div class="progress">
+                        <div class="determinate" style="width: 70%"></div>
+                    </div>
                     </div>
                     <div class="card-content">
-                        <p>{{this.subdomain}}</p>
+                        <p></p>
+                        
                     </div>
                     <div class="card-action">
-                        <a href="">Test link</a>
+                        <a class="" href="#">Update image</a>
                     </div>
                 </div>
             </div>
@@ -91,9 +96,13 @@
     <script>
         let config = {
             count: {{count}},
+            defaultImagePath: "{{defaultImagePath}}",
             domainId: "{{domain._id}}",
+            initialQuery: "{{initialQuery}}",
+            initialPage: {{initialPage}},
+            initialStart: {{initialStart}},
             maxPage: {{maxPage}},
-            initPage: {{currentPage}}
+            rootImagePath: {{rootImagePath}}
         };
     </script>
 </main>

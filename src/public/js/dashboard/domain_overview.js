@@ -1,5 +1,13 @@
-window.onload = () => {
+window.onload = async () => {
     M.AutoInit();
+
+    progress.showPreloader();
+    const initialPageContents = await api.requestNewPage(config.initialQuery, config.initialStart, config.count);
+    progress.hidePreloader();
+    
+    pagination.setMaxPage(config.maxPage = initialPageContents.maxPage);
+    pagination.updatePageNumber(config.initialPage);
+    card.updateCardsFromServerJson(initialPageContents);
 
     document.querySelector("#search").addEventListener("input", async (e) => {
         progress.showPreloader();
@@ -10,30 +18,8 @@ window.onload = () => {
         pagination.setMaxPage(config.maxPage = contents.maxPage);
         pagination.updatePageNumber(1);
         card.updateCardsFromServerJson(contents);
+        queryString.update(searchText, pagination.getCurrentStart(), config.count);
 
-
-
-        // const domainListNodes = document.querySelectorAll("#subdomain_list > a:not(#default_subdomain_item)");
-        // if (searchText != "") {
-        //     let listEmpty = true;
-        //     for (let n of domainListNodes) {
-        //         if (n.innerHTML.toLowerCase().includes(searchText.toLowerCase())) {
-        //            if (n.classList.contains("hide"))
-        //                 n.classList.remove("hide");
-        //             listEmpty = false;
-        //         }
-        //         else
-        //             n.classList.add("hide");
-
-        //         //if list
-        //     }
-        // }
-        // else {
-        //     for (let n of domainListNodes) {
-        //         if (n.classList.contains("hide"))
-        //             n.classList.remove("hide");
-        //     }
-        // }
         console.log("event fired");
     });
 
@@ -44,8 +30,10 @@ window.onload = () => {
     document.querySelectorAll(".pagination > li.pli, li.pli_max, li.chevron_left, li.chevron_right").forEach(
         e => e.addEventListener("click", paginationHandler)
     );
-
-
+    
+    document.querySelectorAll(".pagination > .refresh_image").forEach(
+        e => e.addEventListener("click", refreshImageHandler)
+    );
 }
 
 async function paginationHandler(ev) {
@@ -57,10 +45,16 @@ async function paginationHandler(ev) {
         pagination.updatePageNumber(ev.srcElement.innerHTML);
 
     progress.showPreloader();
+    const searchText = document.querySelector("#search").value;
     const newPage = pagination.getCurrentPage();
-    const contents = await api.requestNewPage(document.querySelector("#search").value, (newPage-1)*config.count, config.count);
+    const contents = await api.requestNewPage(searchText, (newPage-1)*config.count, config.count);
     progress.hidePreloader();
     card.updateCardsFromServerJson(contents);
+    queryString.update(searchText, pagination.getCurrentStart(), config.count);
+}
+
+async function refreshImageHandler(ev) {
+    const whiteImage = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
 
 }
 
@@ -82,11 +76,14 @@ const card = {
         }
     },
     updateCardsFromServerJson: function(resp) {
+        const sorf = (x, y) => x && y && x+y;
+
         const sub_card = document.querySelectorAll(".sub_card");
         for (let i = 0; i < sub_card.length; i++) {
-            //sub_card[i].childNodes[0].childNodes[0].src = """
+            //sub_card[i].childNodes[0].childNodes[0].src = """ 
             if (resp.subdomains.length > i) {
                 card.toggleVisibility(i, true);
+                sub_card[i].querySelector(".card-image > * > img").src = sorf(config.rootImagePath, resp.subdomains[i].imagePath) || "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="//config.defaultImagePath;
                 sub_card[i].querySelector(".card-content > p").innerHTML = resp.subdomains[i].subdomain;
             }
             else
@@ -104,6 +101,14 @@ const debounce = {
     },
     unlock: function() {
         this.locked = false;
+    }
+}
+
+const queryString = {
+    update: function(query, start, count) {
+        const s = encodeURIComponent(start);
+        const c = encodeURIComponent(count);
+        history.replaceState({}, `Domain overview - ${query} | Page: ${pagination.getCurrentPage()}`, `?q=${encodeURIComponent(query)}&start=${s}&count=${c}`);
     }
 }
 
@@ -129,6 +134,9 @@ const pagination = {
         return parseInt(
             document.querySelector(".pagination > li.active").childNodes[0].innerHTML
         );
+    },
+    getCurrentStart: function() {
+        return (this.getCurrentPage()-1)*config.count;
     },
     setItemDisabled: function(element, disable) { 
         if (disable) {
