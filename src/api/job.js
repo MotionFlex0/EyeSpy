@@ -8,11 +8,12 @@ router.get("/:jobId/status", async (req, res) => {
     if (job != null) {
         const progress = await job.progress();
         const isFinished = await job.isCompleted();
+
         res.json({
             success: true,
             progress: progress,
             finished: isFinished,
-            id: job.id
+            ...isFinished && {data: await job.finished()}
         });
     }
     else {

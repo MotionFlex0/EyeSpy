@@ -8,6 +8,7 @@ const path  = require("path")
 const uuid = require("uuid");
 
 const Subdomain = require("../models/subdomain");
+const { error } = require("console");
 const toolQueue = new Bull("queue");
 
 (async () => {
@@ -42,27 +43,43 @@ const toolQueue = new Bull("queue");
         }
     
         console.log(`job ${job.id} has finished.`);
-        done(process.error);
+            done(process.error);
     }); 
     
     toolQueue.process("ispy", async (job, done) => {
-        const subdomain = await Subdomain.findById(job.data.subdomainId);
-        const page = await browser.newPage();
+        try {
+            let progressCount = 0; 
+            const progressCalls = 6;
 
-        let fullImagePath = path.join(config.systemRootImagePath, subdomain.rootDomain.toString());
-        if (!fs.existsSync(fullImagePath))
-            fs.mkdirSync(fullImagePath);
-
-        fullImagePath = path.join(fullImagePath, `${subdomain.subdomain}.png`);
-
-        await page.goto(`${subdomain.tls_supported?"https":"http"}://${subdomain.subdomain}`);
-        await page.screenshot({path: fullImagePath});
-        await page.close();
-        
-        subdomain.imagePath = path.join(subdomain.rootDomain.toString(), `${subdomain.subdomain}.png`);
-        await subdomain.save();
-        console.log("updated image");
-        done();
+            const subdomain = await Subdomain.findById(job.data.subdomainId);
+            const page = await browser.newPage();
+            job.progress((++progressCount/progressCalls)*100);
+            
+            let fullImagePath = path.join(config.systemRootImagePath, subdomain.rootDomain.toString());
+            if (!fs.existsSync(fullImagePath))
+                fs.mkdirSync(fullImagePath);
+            job.progress((++progressCount/progressCalls)*100);
+    
+            fullImagePath = path.join(fullImagePath, `${subdomain.subdomain}.png`);
+    
+            await page.goto(`${subdomain.tls_supported?"https":"http"}://${subdomain.subdomain}`);
+            job.progress((++progressCount/progressCalls)*100);
+            await page.screenshot({path: fullImagePath});
+            job.progress((++progressCount/progressCalls)*100);
+            await page.close();
+            
+            subdomain.imagePath = path.join(subdomain.rootDomain.toString(), `${subdomain.subdomain}.png`);
+            await subdomain.save();
+            job.progress((++progressCount/progressCalls)*100);
+            console.log("updated image");
+            done(null, subdomain.imagePath);
+        }
+        catch (e){
+            done(e);
+        }
+        finally {
+            job.progress = 100;
+        }
     });
 })();
 

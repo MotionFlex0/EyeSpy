@@ -23,17 +23,20 @@ window.onload = async () => {
         console.log("event fired");
     });
 
-    // document.querySelector("#scanBtn").addEventListener("click", () => {
+    // document.querySelector("#scanBtn").addEventListener("click", (ev) => {
     //     fetch("/api/domains/subscan");
+    //     HTMLElement.prototype.dataset
     // });
 
     document.querySelectorAll(".pagination > li.pli, li.pli_max, li.chevron_left, li.chevron_right").forEach(
         e => e.addEventListener("click", paginationHandler)
     );
     
-    document.querySelectorAll(".pagination > .refresh_image").forEach(
+    document.querySelectorAll(".refresh_image").forEach(
         e => e.addEventListener("click", refreshImageHandler)
     );
+
+
 }
 
 async function paginationHandler(ev) {
@@ -55,7 +58,32 @@ async function paginationHandler(ev) {
 
 async function refreshImageHandler(ev) {
     const whiteImage = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
+    const progressBar = ev.srcElement.parentElement.nextElementSibling.children[0];
+    const subdomainId = ev.srcElement.parentElement.parentElement.parentElement.dataset.subdomainId;
 
+    ev.srcElement.parentElement.classList.add("hide");
+    const resp = await fetch(`/api/domains/id/${config.domainId}/s/${subdomainId}/ispy`).then(x => x.json());
+ 
+    if (resp.success) {
+        progressBar.style.width = 0;
+        progressBar.parentElement.classList.remove("hide");
+        ev.srcElement.parentElement.previousElementSibling.children[0].src = whiteImage;
+        console.log("here")
+        let jobContent = await new Promise((resolve, reject) => {
+            const interval = setInterval(async () => {
+                const r = await fetch(`/api/job/${resp.jobId}/status`).then(x => x.json());
+                progressBar.style.width = r.progress+"%";
+                if (r.finished) {
+                    clearInterval(interval);
+                    resolve(r);
+                }
+            }, 1000)
+        });
+
+        ev.srcElement.parentElement.previousElementSibling.children[0].src = config.rootImagePath + jobContent.data;
+        progressBar.parentElement.classList.add("hide");
+    }
+    ev.srcElement.parentElement.classList.remove("hide");
 }
 
 const api = {
@@ -83,7 +111,8 @@ const card = {
             //sub_card[i].childNodes[0].childNodes[0].src = """ 
             if (resp.subdomains.length > i) {
                 card.toggleVisibility(i, true);
-                sub_card[i].querySelector(".card-image > * > img").src = sorf(config.rootImagePath, resp.subdomains[i].imagePath) || "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="//config.defaultImagePath;
+                sub_card[i].dataset.subdomainId = resp.subdomains[i]._id;
+                sub_card[i].querySelector(".card-image > * > img").src = sorf(config.rootImagePath, resp.subdomains[i].imagePath) || config.defaultImagePath;
                 sub_card[i].querySelector(".card-content > p").innerHTML = resp.subdomains[i].subdomain;
             }
             else
