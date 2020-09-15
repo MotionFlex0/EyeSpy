@@ -9,10 +9,12 @@ const uuid = require("uuid");
 
 const Subdomain = require("../models/subdomain");
 const { error } = require("console");
+const subdomain = require("../models/subdomain");
+const { Domain } = require("domain");
 const toolQueue = new Bull("queue");
 
 (async () => {
-    const browser = await puppeteer.launch();
+const browser = await puppeteer.launch({headless: false});
 
     toolQueue.process("sublist3r", (job, done) => {
         const hostname = job.data.hostname;
@@ -45,13 +47,13 @@ const toolQueue = new Bull("queue");
         console.log(`job ${job.id} has finished.`);
             done(process.error);
     }); 
-    
-    toolQueue.process("ispy", async (job, done) => {
+    toolQueue.on()
+    toolQueue.process("ispy", 10, async (job, done) => {
+        const subdomain = await Subdomain.findById(job.data.subdomainId);
         try {
             let progressCount = 0; 
             const progressCalls = 6;
 
-            const subdomain = await Subdomain.findById(job.data.subdomainId);
             const page = await browser.newPage();
             job.progress((++progressCount/progressCalls)*100);
             
@@ -62,12 +64,14 @@ const toolQueue = new Bull("queue");
     
             fullImagePath = path.join(fullImagePath, `${subdomain.subdomain}.png`);
     
-            await page.goto(`${subdomain.tls_supported?"https":"http"}://${subdomain.subdomain}`);
+            const resp = await page.goto(`${subdomain.tls_supported?"https":"http"}://${subdomain.subdomain}`, { timeout: 10000 });
             job.progress((++progressCount/progressCalls)*100);
             await page.screenshot({path: fullImagePath});
             job.progress((++progressCount/progressCalls)*100);
             await page.close();
             
+            subdomain.lastConnSuccessful = true;
+            subdomain.lastStatusCode = resp.status();
             subdomain.imagePath = path.join(subdomain.rootDomain.toString(), `${subdomain.subdomain}.png`);
             await subdomain.save();
             job.progress((++progressCount/progressCalls)*100);
@@ -75,11 +79,36 @@ const toolQueue = new Bull("queue");
             done(null, subdomain.imagePath);
         }
         catch (e){
-            done(e);
+            console.log("failed....");
+            console.log(e.message);
+            subdomain.lastError = e.message;
+            subdomain.lastConnSuccessful = false;
+            subdomain.save();
+            done(e.message);
         }
         finally {
             job.progress = 100;
         }
+    });
+
+    toolQueue.process("ispy-bulk", async (job, done) => {
+        const domain = await Domain.findById(job.data.domainId);
+        const subdomains = await Subdomain.find({rootDomain: job.data.domainId});
+        const len = subdomains.length;
+
+        domain.bulk_image_job = job.id;
+
+        const jobs = await Promise.all(subdomains.map(async s => {
+            return await toolQueue.add("ispy", {subdomainId: s._id});
+        }));
+        
+        let count = 0;
+        job.progress((count/len)*100)
+        // await new Promise(resolve => setTimeout(resolve, 5000));
+        // console.log("job done");
+
+        domain.bulk_image_job = null;
+        done(null, 2);
     });
 })();
 

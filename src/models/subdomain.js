@@ -12,6 +12,10 @@ const SubdomainSchema = new mongoose.Schema({
         type: String,
         default:""
     },
+    imaageRefreshJob: {
+        type: Number,
+        default: null
+    },
     serviceProvider: {
         type: String,
         enum: ["heroku", "s3", "wordpress", "cloudfront", "ghpages", "none"],
@@ -21,7 +25,14 @@ const SubdomainSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Domain",
         required: true
-    }
+    },
+    lastConnSuccessful: {
+        type: String,
+        enum: ["true", "false", "never"],
+        default: "never"
+    },
+    lastError: String,
+    lastStatusCode: Number
 });
 
 module.exports = mongoose.model("Subdomain", SubdomainSchema);

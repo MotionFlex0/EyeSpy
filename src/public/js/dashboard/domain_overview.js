@@ -28,6 +28,11 @@ window.onload = async () => {
     //     HTMLElement.prototype.dataset
     // });
 
+     document.querySelector("#iSpyAll").addEventListener("click", async (ev) => {
+        const job = await fetch(`/api/domains/id/${config.domainId}/ispy`).then(res => res.json());
+        console.log(job);
+    });
+
     document.querySelectorAll(".pagination > li.pli, li.pli_max, li.chevron_left, li.chevron_right").forEach(
         e => e.addEventListener("click", paginationHandler)
     );
@@ -58,21 +63,22 @@ async function paginationHandler(ev) {
 
 async function refreshImageHandler(ev) {
     const whiteImage = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
-    const progressBar = ev.srcElement.parentElement.nextElementSibling.children[0];
+    const progressBar = ev.srcElement.parentElement.nextElementSibling;
     const subdomainId = ev.srcElement.parentElement.parentElement.parentElement.dataset.subdomainId;
 
     ev.srcElement.parentElement.classList.add("hide");
     const resp = await fetch(`/api/domains/id/${config.domainId}/s/${subdomainId}/ispy`).then(x => x.json());
  
     if (resp.success) {
-        progressBar.style.width = 0;
-        progressBar.parentElement.classList.remove("hide");
+        card.progressBar.setColorGreen(progressBar);
+        card.progressBar.setProgress(progressBar, 0);
+        card.progressBar.setVisibility(progressBar, true);
         ev.srcElement.parentElement.previousElementSibling.children[0].src = whiteImage;
         console.log("here")
-        let jobContent = await new Promise((resolve, reject) => {
+        let jobResp = await new Promise((resolve, reject) => {
             const interval = setInterval(async () => {
                 const r = await fetch(`/api/job/${resp.jobId}/status`).then(x => x.json());
-                progressBar.style.width = r.progress+"%";
+                card.progressBar.setProgress(progressBar, r.progress);
                 if (r.finished) {
                     clearInterval(interval);
                     resolve(r);
@@ -80,8 +86,18 @@ async function refreshImageHandler(ev) {
             }, 1000)
         });
 
-        ev.srcElement.parentElement.previousElementSibling.children[0].src = config.rootImagePath + jobContent.data;
-        progressBar.parentElement.classList.add("hide");
+        card.progressBar.setProgress(progressBar, 100);
+
+        if (jobResp.error != undefined)
+            card.progressBar.setColorRed(progressBar);
+
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        if (jobResp.error != undefined) 
+            ev.srcElement.parentElement.previousElementSibling.children[0].src = config.defaultImagePath;
+        else
+            ev.srcElement.parentElement.previousElementSibling.children[0].src = config.rootImagePath + jobResp.data;
+        card.progressBar.setVisibility(progressBar, false);
     }
     ev.srcElement.parentElement.classList.remove("hide");
 }
@@ -117,6 +133,28 @@ const card = {
             }
             else
                 card.toggleVisibility(i, false);
+        }
+    },
+    progressBar: {
+        getElement(cardNum) {
+            const cards = document.querySelectorAll(".sub_card");
+            if (cards.length > cardNum)
+                return cards[cardNum].querySelector("div.progress");
+            return null;
+        },
+        setColorGreen: function(element) {
+            element.children[0].classList.remove("red");
+            element.children[0].classList.add("green");
+        },
+        setColorRed: function (element) {
+            element.children[0].classList.remove("green");
+            element.children[0].classList.add("red");
+        },
+        setProgress: function(element, percentage) {
+            element.children[0].style.width = percentage+"%";
+        },
+        setVisibility: function (element, toggle) {
+            element.classList.toggle("hide", !toggle);
         }
     }
 }

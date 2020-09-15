@@ -6,11 +6,11 @@ const url = require("url");
 const { body, validationResult } = require("express-validator");
 
 const config = require("../config/prod");
-const Domain = require("../models/domain");
+const BulkJob = require("../models/bulk_job");
+const Domain = require("../models/domain")
 const Subdomain = require("../models/subdomain");
 const toolQueue = require("../workers/tools");
 const domain = require("../models/domain");
-const { EDESTADDRREQ } = require("constants");
 const e = require("express");
 //toolQueue.empty()
 router.get("/", (req, res) => {
@@ -161,6 +161,45 @@ router.delete("/id/:domainId", (req, res) => {
             })
         });
     });
+});
+
+//TODO: MAYBE ADDA BULK JOB, JOB NAME AND HAVE IT ADD ALL THE OTHER JOBS
+router.get("/id/:domainId/ispy", async (req, res) => {
+    const domainId = res.locals.domain._id;
+    console.log("before-add")
+    const newJob = await toolQueue.add("ispy-bulk", { domainId });
+    
+    if (newJob != null) {
+        return res.json({
+            success: true,
+            jobId: newJob.id
+        });
+    }
+    else {
+        return res.json({
+            success: false,
+            message: `failed to add a job with ${domainId} as the domainId`,
+        });  
+    }
+    // const subdomains = await Subdomain.find({
+    //     rootDomain: res.locals.domain
+    // });
+
+    // const bulkJob = new BulkJob({
+    //     _id: mongoose.Types.ObjectId(),
+    //     name: "ispy",
+    //     data: res.locals.domain._id
+    // });
+
+    // subdomains.forEach(s => {
+    //     const job = await toolQueue.add("ispy", {
+    //         subdomainId: s._id
+    //     });
+    //     bulkJob.jobs.push(job.id);
+    // });
+
+
+    // bulkJob.save();
 });
 
 //subdomain filter for a given domainId

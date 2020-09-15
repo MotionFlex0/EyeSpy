@@ -7,10 +7,11 @@ const domainSchema = mongoose.Schema({
     hostname: {
         type: String,
         required: "Host cannot be empty",
-        unique: true
+        unique: true,
     },
     tls_supported: Boolean,
-    last_scan_timestamp: Date
+    last_scan_timestamp: Date,
+    bulk_image_job: Number // non-null if there is a bulk-job for this domain
 });
 
 module.exports = mongoose.model("Domain", domainSchema);
