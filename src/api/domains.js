@@ -165,8 +165,15 @@ router.delete("/id/:domainId", (req, res) => {
 
 //TODO: MAYBE ADDA BULK JOB, JOB NAME AND HAVE IT ADD ALL THE OTHER JOBS
 router.get("/id/:domainId/ispy", async (req, res) => {
+    if (res.locals.domain.bulk_image_job != null) {
+        return res.json({
+            success: false,
+            jobId: res.locals.domain.bulk_image_job,
+            message: `${domainId} already has a running job`,
+        });  
+    }
+
     const domainId = res.locals.domain._id;
-    console.log("before-add")
     const newJob = await toolQueue.add("ispy-bulk", { domainId });
     
     if (newJob != null) {
@@ -225,11 +232,13 @@ router.get("/id/:domainId/subdomains", async (req, res) =>  {
     })
     .count()/count);
     
+    const bulkImageJob = res.locals.domain.bulk_image_job;
     res.json({
         domain: res.locals.domain,
         maxPage,
         subdomains,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        ...bulkImageJob && {bulkImageJob}
     });
 });
 

@@ -21,7 +21,7 @@ const dashboard = require("./routes/dashboard");
 const { exit } = require("process");
 
 //const browser = puppeteer.launch();
-(() => { // Check if python is installed, before starting server -- improve readability
+(() => { // Check if python is installed, before starting server -- TODO: improve readability
     try {
         childProcess.execSync("python --version");
     }

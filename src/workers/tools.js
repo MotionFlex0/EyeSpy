@@ -15,7 +15,6 @@ const toolQueue = new Bull("queue");
 
 (async () => {
 const browser = await puppeteer.launch({headless: false});
-
     toolQueue.process("sublist3r", (job, done) => {
         const hostname = job.data.hostname;
         const outputFile = path.join(config.tempPath, `${uuid.v4()}.txt`);
@@ -93,22 +92,29 @@ const browser = await puppeteer.launch({headless: false});
 
     toolQueue.process("ispy-bulk", async (job, done) => {
         const domain = await Domain.findById(job.data.domainId);
-        const subdomains = await Subdomain.find({rootDomain: job.data.domainId});
-        const len = subdomains.length;
+        const subdomains = await Subdomain.find({rootDomain: job.data.domainId}).limit(5).exec();
 
         domain.bulk_image_job = job.id;
 
         const jobs = await Promise.all(subdomains.map(async s => {
             return await toolQueue.add("ispy", {subdomainId: s._id});
         }));
+
+        const jobsCount = jobs.length;
+        let jobsFinished = 0;
+        while (jobsFinished < jobsCount) {
+            jobs = jobs.filter(async job => !(await job.isCompleted() || await job.isFailed()));
+            jobsFinished += jobsCount - jobs.length;
+            job.progress((jobsFinished/jobsCount)*100);
+            await (new Promise(resolve => setTimeout(resolve, 500))); // crude sleep
+        }
+
         
-        let count = 0;
-        job.progress((count/len)*100)
         // await new Promise(resolve => setTimeout(resolve, 5000));
         // console.log("job done");
 
         domain.bulk_image_job = null;
-        done(null, 2);
+        done(null, true);
     });
 })();
 

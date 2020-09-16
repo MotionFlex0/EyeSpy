@@ -22,7 +22,6 @@
     "express": "^4.17.1",
     "express-handlebars": "^5.1.0",
     "express-validator": "^6.6.1",
-    "firebase": "^7.16.1",
     "firebase-admin": "^9.1.1",
     "mongodb": "^3.6.0",
     "mongoose": "^5.10.2",
