@@ -35,4 +35,14 @@ const SubdomainSchema = new mongoose.Schema({
     lastStatusCode: Number
 });
 
+SubdomainSchema.methods.getActiveJobs = function() {
+    let activeJobs = await toolQueue.getJobs(["active", "delayed", "waiting"]);
+    return activeJobs.filter(j => (j.name == "ispy" || j.name == "sublist3r") && j.data.subdomainId == this._id);
+}
+
+SubdomainSchema.static.getActiveJobsForDomain = function(domain) {
+    let activeJobs = await toolQueue.getJobs(["active", "delayed", "waiting"]);
+    return activeJobs.filter(j => (j.name == "ispy" || j.name == "sublist3r") && j.data.rootDomain == domain._id);
+}
+
 module.exports = mongoose.model("Subdomain", SubdomainSchema);

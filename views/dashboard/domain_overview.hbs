@@ -2,97 +2,101 @@
 
 <main>
     <div class="container">
-        <div class="row">
-            <div class="col s4">
-                <h4>{{domain.hostname}}</h4>    
-            </div>
-            <div class="col s4 offset-s4">
-                <p>Last scan: 03/08/2020 5:30pm</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="input-field col s6">
-                <input id="search" type="text" class="validate" value="{{initialQuery}}">
-                <label for="search">Search Subdomains</label>
-            </div>
-             <a id="scanSubdomain" class="col s2 offset-s1 waves-effect waves-light btn modal-trigger" href="#">Use Sublist3r</a>
-             <a id="iSpyAll" class="col s2 offset-s1 waves-effect waves-light btn modal-trigger" href="#">Use iSpy for this domain</a>
-             {{!-- <a id="testButton" class="col s2 offset-s1 waves-effect waves-light btn modal-trigger" href="#">Use iSpy for this domain</a> --}}
-        </div>
-        <div class="row">
-             {{!-- <a id="addSubdomain" class="waves-effect waves-light btn modal-trigger" href="#add_modal">Add new subdomain</a> --}}
-            
-            <div id="card_preloader" class="center-align hide">
-                <div class="preloader-wrapper big active">
-                    <div class="spinner-layer spinner-purple-only">
-                    <div class="circle-clipper left">
-                        <div class="circle"></div>
-                    </div><div class="gap-patch">
-                        <div class="circle"></div>
-                    </div><div class="circle-clipper right">
-                        <div class="circle"></div>
-                    </div>
-                    </div>
+        <div class="normal">
+            <div class="row">
+                <div class="col s4">
+                    <h4>{{domain.hostname}}</h4>    
+                </div>
+                <div class="col s4 offset-s4">
+                    {{!-- <p>Last scan: 03/08/2020 5:30pm</p> --}}
+                    <p id="progressServerJob" class="" data-job-name="" data-progress="0"><b>Currently running iSpy: 100%</b></p>
                 </div>
             </div>
-            {{#each cardCount}}
-            <div class="col s3">   
-                <div class="sub_card card medium" data-subdomain-id="">
-                    <div class="card-image"> <!-- TODO: use a 2d array prior to being passed here -->
-                        <img class="materialboxed" src="" data-caption="Test">
-                        <a class="refresh_image btn-floating halfway-fab waves-effect waves-light green"><i class="material-icons">cached</i></a>
-                        <div class="progress hide">
-                            <div class="determinate" style="width: 0%"></div>
+            <div class="row">
+                <div class="input-field col s6">
+                    <input id="search" type="text" class="validate" value="{{initialQuery}}">
+                    <label for="search">Search Subdomains</label>
+                </div>
+                
+                <a id="scanSubdomain" class="col s2 offset-s1 waves-effect waves-light btn" href="#">Use Sublist3r</a>
+                <a id="iSpyAll" class="col s2 offset-s1 waves-effect waves-light btn" href="#">Use iSpy on all</a>   
+                {{!-- <a id="testButton" class="col s2 offset-s1 waves-effect waves-light btn modal-trigger" href="#">Use iSpy for this domain</a> --}}
+            </div>
+            <div class="row">
+                {{!-- <a id="addSubdomain" class="waves-effect waves-light btn modal-trigger" href="#add_modal">Add new subdomain</a> --}}
+                
+                <div id="card_preloader" class="center-align hide">
+                    <div class="preloader-wrapper big active">
+                        <div class="spinner-layer spinner-purple-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div><div class="gap-patch">
+                            <div class="circle"></div>
+                        </div><div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
                         </div>
                     </div>
-                    <div class="card-content">
-                        <p></p>
-                        
+                </div>
+                {{#each cardCount}}
+                <div class="col s3">   
+                    <div class="sub_card card medium hide" data-subdomain-id="">
+                        <div class="card-image"> <!-- TODO: use a 2d array prior to being passed here -->
+                            <img class="materialboxed" src="" data-caption="Test">
+                            <a class="refresh_image btn-floating halfway-fab waves-effect waves-light green"><i class="material-icons">cached</i></a>
+                            <div class="progress hide">
+                                <div class="determinate" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <p></p>
+                            
+                        </div>
+                        <div class="card-action">
+                            <a class="" href="#">Update image</a>
+                        </div>
                     </div>
-                    <div class="card-action">
-                        <a class="" href="#">Update image</a>
+                </div>
+                {{/each}}
+
+                        {{!-- <div id="subdomain_listview" class="collection hide">
+                        <a id="default_subdomain_item" class="collection-item ternary-color-text"> ### Empty subddomain list... ###</a>
+                        {{#each subdomains}}
+                            <a id="default_subdomain_item" class="collection-item ternary-color-text">{{this.subddomain}}</a>
+                        {{else}}
+
+                        {{/each}}
+
+                    </div> --}}
+
+                <div id="add_modal" class="modal bg-color">
+                    <div class="modal-content">
+                        <h4 class="center-align">Add new subdomain</h4>
+                        <div class="input-field col s8">
+                            <input type="text" id="input_subdomain">
+                            <label for="input_subdomain">Subdomain</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-color">
+                        <a href="#" class="modal-close btn-flat waves-red waves-effect primary-color seconary-color-text">Cancel</a>
+                        <a id="addButton" href="#"class="modal-close btn-flat waves-green waves-effect primary-color seconary-color-text">Add</a>
                     </div>
                 </div>
             </div>
-            {{/each}}
+            <div class="row">
+                <ul class="pagination center-align">
+                    <li class="chevron_left disabled"><a class="ternary-color-text" href="#!"><i class="material-icons">chevron_left</i></a></li>
+                    <li class="pli active primary-color"><a class="primary-color-text" href="#!">1</a></li>
+                    <li class="pli waves-effect waves-purple"><a class="primary-color-text" href="#!">2</a></li>
+                    <li class="pli waves-effect waves-purple"><a class="primary-color-text" href="#!">3</a></li>
+                    <li class="pli waves-effect waves-purple"><a class="primary-color-text" href="#!">4</a></li>
+                    <li class="pli waves-effect waves-purple"><a class="primary-color-text" href="#!">5</a></li>
+                    <li class="disabled seperator"><a class="primary-color-text" href="#!">..</a></li>
+                    <li class="pli_max waves-effect waves-purple"><a class="primary-color-text" href="#!">{{maxPage}}</a></li>
+                    <li class="chevron_right waves-effect"><a class="secondary-color-text" href="#!"><i class="material-icons">chevron_right</i></a></li>
+                </ul>
 
-                    {{!-- <div id="subdomain_listview" class="collection hide">
-                    <a id="default_subdomain_item" class="collection-item ternary-color-text"> ### Empty subddomain list... ###</a>
-                    {{#each subdomains}}
-                        <a id="default_subdomain_item" class="collection-item ternary-color-text">{{this.subddomain}}</a>
-                    {{else}}
-
-                    {{/each}}
-
-                </div> --}}
-
-            <div id="add_modal" class="modal bg-color">
-                <div class="modal-content">
-                    <h4 class="center-align">Add new subdomain</h4>
-                    <div class="input-field col s8">
-                        <input type="text" id="input_subdomain">
-                        <label for="input_subdomain">Subdomain</label>
-                    </div>
-                </div>
-                <div class="modal-footer bg-color">
-                    <a href="#" class="modal-close btn-flat waves-red waves-effect primary-color seconary-color-text">Cancel</a>
-                    <a id="addButton" href="#"class="modal-close btn-flat waves-green waves-effect primary-color seconary-color-text">Add</a>
-                </div>
             </div>
-        </div>
-        <div class="row">
-            <ul class="pagination center-align">
-                <li class="chevron_left disabled"><a class="ternary-color-text" href="#!"><i class="material-icons">chevron_left</i></a></li>
-                <li class="pli active primary-color"><a class="primary-color-text" href="#!">1</a></li>
-                <li class="pli waves-effect waves-purple"><a class="primary-color-text" href="#!">2</a></li>
-                <li class="pli waves-effect waves-purple"><a class="primary-color-text" href="#!">3</a></li>
-                <li class="pli waves-effect waves-purple"><a class="primary-color-text" href="#!">4</a></li>
-                <li class="pli waves-effect waves-purple"><a class="primary-color-text" href="#!">5</a></li>
-                <li class="disabled seperator"><a class="primary-color-text" href="#!">..</a></li>
-                <li class="pli_max waves-effect waves-purple"><a class="primary-color-text" href="#!">{{maxPage}}</a></li>
-                <li class="chevron_right waves-effect"><a class="secondary-color-text" href="#!"><i class="material-icons">chevron_right</i></a></li>
-            </ul>
-
         </div>
     </div>
     <script>

@@ -14,7 +14,14 @@ const { Domain } = require("domain");
 const toolQueue = new Bull("queue");
 
 (async () => {
-const browser = await puppeteer.launch({headless: false});
+    const browser = await puppeteer.launch({headless: false});
+
+    toolQueue.on("stalled", (job) => { 
+        console.error(`job with id ${job.id} and name ${job.name} has stalled`);
+    });
+
+    toolQueue.on("")
+
     toolQueue.process("sublist3r", (job, done) => {
         const hostname = job.data.hostname;
         const outputFile = path.join(config.tempPath, `${uuid.v4()}.txt`);
@@ -42,11 +49,11 @@ const browser = await puppeteer.launch({headless: false});
                 }
             });
         }
-    
+ 
         console.log(`job ${job.id} has finished.`);
             done(process.error);
     }); 
-    toolQueue.on()
+
     toolQueue.process("ispy", 10, async (job, done) => {
         const subdomain = await Subdomain.findById(job.data.subdomainId);
         try {
@@ -90,11 +97,12 @@ const browser = await puppeteer.launch({headless: false});
         }
     });
 
+    //TODO: Create a single "bulk" job and pass the name for the specific job, as part of the data.
     toolQueue.process("ispy-bulk", async (job, done) => {
         const domain = await Domain.findById(job.data.domainId);
         const subdomains = await Subdomain.find({rootDomain: job.data.domainId}).limit(5).exec();
 
-        domain.bulk_image_job = job.id;
+        domain.bulk_job_id = job.id;
 
         const jobs = await Promise.all(subdomains.map(async s => {
             return await toolQueue.add("ispy", {subdomainId: s._id});
@@ -113,7 +121,7 @@ const browser = await puppeteer.launch({headless: false});
         // await new Promise(resolve => setTimeout(resolve, 5000));
         // console.log("job done");
 
-        domain.bulk_image_job = null;
+        domain.bulk_job_id = null;
         done(null, true);
     });
 })();

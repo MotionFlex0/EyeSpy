@@ -5,7 +5,7 @@
   "main": "src/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon",
+    "dev": "nodemon --ignore public/*",
     "build-tools": "pip install -r tools/sublist3r/requirements.txt && echo \"use docker\""
   },
   "repository": {
@@ -25,7 +25,7 @@
     "firebase-admin": "^9.1.1",
     "mongodb": "^3.6.0",
     "mongoose": "^5.10.2",
-    "puppeteer": "^5.2.1",
+    "puppeteer": "^5.3.0",
     "socket.io": "^2.3.0",
     "uuid": "^8.3.0"
   },

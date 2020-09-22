@@ -46,7 +46,8 @@ app.use("/api/job", require("./api/job"))
 
 app.get("/", (req, res) => {
     const script = ["js/index.js"];
-    res.render("index", {title:"Login page", script});
+    res.redirect("/dashboard");
+    //res.render("index", {title:"Login page", script});
 });
 
 server.listen(5000);

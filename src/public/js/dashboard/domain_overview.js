@@ -23,10 +23,21 @@ window.onload = async () => {
         console.log("event fired");
     });
 
-    // document.querySelector("#scanBtn").addEventListener("click", (ev) => {
-    //     fetch("/api/domains/subscan");
-    //     HTMLElement.prototype.dataset
-    // });
+    document.querySelector("#scanSubdomain").addEventListener("click", (ev) => {
+        const job = await fetch(`/api/domains/id/${config.domainId}/subsearch`).then(res => res.json());
+        job.
+
+        progressServerJob.setJobName("Sublist3r");
+        const checkJobProgress = setInterval(async () => {
+            const r = await fetch(`/api/job/${job.jobId}/status`).then(x => x.json());
+            progressServerJob.setProgress(r.progress);
+            if (r.finished) {
+                clearInterval(interval);
+                resolve(r);
+            }
+            console.log(1)
+        }, 1000);
+    });
 
      document.querySelector("#iSpyAll").addEventListener("click", async (ev) => {
         const job = await fetch(`/api/domains/id/${config.domainId}/ispy`).then(res => res.json());
@@ -75,7 +86,7 @@ async function refreshImageHandler(ev) {
         card.progressBar.setVisibility(progressBar, true);
         ev.srcElement.parentElement.previousElementSibling.children[0].src = whiteImage;
         console.log("here")
-        let jobResp = await new Promise((resolve, reject) => {
+        let jobResp = await new Promise(resolve => {
             const interval = setInterval(async () => {
                 const r = await fetch(`/api/job/${resp.jobId}/status`).then(x => x.json());
                 card.progressBar.setProgress(progressBar, r.progress);
@@ -91,7 +102,7 @@ async function refreshImageHandler(ev) {
         if (jobResp.error != undefined)
             card.progressBar.setColorRed(progressBar);
 
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
         if (jobResp.error != undefined) 
             ev.srcElement.parentElement.previousElementSibling.children[0].src = config.defaultImagePath;
@@ -108,6 +119,13 @@ const api = {
         const s = encodeURIComponent(start);
         const c = encodeURIComponent(count);
         return await (await fetch(`/api/domains/id/${config.domainId}/subdomains?q=${q}&start=${s}&count=${c}`)).json();
+    }
+}
+
+const toolButtons = {
+    toggleDisabled: function(disable) {
+        document.querySelector("#scanSubdomain").classList.toggle("disabled", disable);
+        document.querySelector("#iSpyAll").classList.toggle("disabled", disable);
     }
 }
 
@@ -193,6 +211,43 @@ const progress = {
             card.toggleVisibility(i, false);
         preloader.classList.add("hide");
         preloader.classList.remove("active");    
+    }
+}
+
+const progressServerJob = {
+    getElement: function() {
+        return document.querySelector("#progressServerJob");
+    },
+    setProgress: function(progress) {
+        if (progress < 0 || progress > 100)
+            return;
+
+        //only works when startCol > endCol [GradientNormaliseChannel]
+        const gradient = (startCol, endCol) => Math.round(startCol-((startCol-endCol)*(progress/100)));
+
+        const MIN_PROGRESS_COLOR = 0xf44336;// RED
+        const MAX_PROGRESS_COLOR = 0x00e676;// GREEN
+
+        const red = gradient((MIN_PROGRESS_COLOR >> 16) & 0xFF, (MAX_PROGRESS_COLOR >> 16) & 0xFF);
+        const green = gradient((MIN_PROGRESS_COLOR >> 8) & 0xFF, (MAX_PROGRESS_COLOR >> 8) & 0xFF);
+        const blue = gradient((MIN_PROGRESS_COLOR & 0xFF), (MAX_PROGRESS_COLOR & 0xFF));
+
+        let newColor = ((red << 16) + (green << 8) + blue).toString(16);
+        console.log(parseInt(newColor, 16))
+        newColor = "0".repeat(6 - newColor.length) + newColor;
+        console.log(this.getElement())
+        const element = this.getElement();
+        element.dataset.progress = progress;
+        element.children[0].innerHTML = `Currently running ${element.dataset.jobName}: ${progress==100?"Completed!":progress+"%"}`;
+        element.children[0].style.color = "#" + newColor;
+    },
+    setJobName: function(name) {
+        const element = this.getElement();
+        element.dataset.jobName = name;
+        element.children[0].innerHTML = `Currently running ${name}: ${element.dataset.progress}%`
+    },
+    toggleVisibility: function(visible) {
+        this.getElement().classList.toggle("hide", !visible);
     }
 }
 

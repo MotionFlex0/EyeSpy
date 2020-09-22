@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const bulkJob = mongoose.Schema({
+const BulkJob = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     name: String,
     finished: {
@@ -11,4 +11,4 @@ const bulkJob = mongoose.Schema({
     data: String
 });
 
-module.exports = mongoose.model("BulkJob", bulkJob);
+module.exports = mongoose.model("BulkJob", BulkJob);
