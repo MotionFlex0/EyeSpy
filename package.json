@@ -38,6 +38,7 @@
     "@types/puppeteer": "^3.0.1",
     "@types/socket.io": "^2.1.11",
     "@types/socket.io-client": "^1.4.33",
+    "bull-board": "^0.9.0",
     "nodemon": "^2.0.4"
   }
 }

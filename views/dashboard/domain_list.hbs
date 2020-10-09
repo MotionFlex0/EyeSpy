@@ -1,43 +1,45 @@
 {{> postlog_header}}
 
-<div class="container">
-    <h2>Dashboard domains page</h2>
-    <div class="row">
-        <div class="input-field col s6">
-            <input id="search" type="text" class="validate">
-            <label for="search">Search domains</label>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col s6 offset-s0">
-            <a id="addDomain" class="waves-effect waves-light btn modal-trigger" href="#add_modal">Add new domain</a>
-            <div id="domain_list" class="collection">
-                <a id="default_domain_item" class="collection-item ternary-color-text"> ### Empty domain list... ###</a>
+<main>
+    <div class="container">
+        <h2>Dashboard domains page</h2>
+        <div class="row">
+            <div class="input-field col s6">
+                <input id="search" type="text" class="validate">
+                <label for="search">Search domains</label>
             </div>
         </div>
-        <div id="add_modal" class="modal bg-color">
-            <div class="modal-content">
-                <h4>Add New Domain</h4>
-                <div class="input-field col s8">
-                    <input type="text" id="input_hostname">
-                    <label for="input_hostname">Hostname</label>
+        <div class="row">
+            <div class="col s6 offset-s0">
+                <a id="addDomain" class="waves-effect waves-light btn modal-trigger" href="#add_modal">Add new domain</a>
+                <div id="domain_list" class="collection">
+                    <a id="default_domain_item" class="collection-item ternary-color-text"> ### Empty domain list... ###</a>
                 </div>
             </div>
-            <div class="modal-footer bg-color">
-                <a href="#" class="modal-close btn-flat waves-red waves-effect primary-color seconary-color-text">Cancel</a>
-                <a id="addButton" href="#"class="modal-close btn-flat waves-green waves-effect primary-color seconary-color-text">Add</a>
+            <div id="add_modal" class="modal bg-color">
+                <div class="modal-content">
+                    <h4>Add New Domain</h4>
+                    <div class="input-field col s8">
+                        <input type="text" id="input_hostname">
+                        <label for="input_hostname">Hostname</label>
+                    </div>
+                </div>
+                <div class="modal-footer bg-color">
+                    <a href="#" class="modal-close btn-flat waves-red waves-effect primary-color seconary-color-text">Cancel</a>
+                    <a id="addButton" href="#"class="modal-close btn-flat waves-green waves-effect primary-color seconary-color-text">Add</a>
+                </div>
             </div>
         </div>
+        <div class="row">
+            <ul class="pagination">
+                <li class="disabled"><a class="" href="#!"><i class="material-icons">chevron_left</i></a></li>
+                <li class="active primary-color"><a class="primary-color-text" href="#!">1</a></li>
+                <li class="waves-effect"><a class="primary-color-text" href="#!">2</a></li>
+                <li class="waves-effect"><a class="primary-color-text" href="#!">3</a></li>
+                <li class="waves-effect"><a class="primary-color-text" href="#!">4</a></li>
+                <li class="waves-effect"><a class="primary-color-text" href="#!">5</a></li>
+                <li class="waves-effect"><a class="secondary-color-text" href="#!"><i class="material-icons">chevron_right</i></a></li>
+            </ul>
+        </div>
     </div>
-    <div class="row">
-        <ul class="pagination">
-            <li class="disabled"><a class="" href="#!"><i class="material-icons">chevron_left</i></a></li>
-            <li class="active primary-color"><a class="primary-color-text" href="#!">1</a></li>
-            <li class="waves-effect"><a class="primary-color-text" href="#!">2</a></li>
-            <li class="waves-effect"><a class="primary-color-text" href="#!">3</a></li>
-            <li class="waves-effect"><a class="primary-color-text" href="#!">4</a></li>
-            <li class="waves-effect"><a class="primary-color-text" href="#!">5</a></li>
-            <li class="waves-effect"><a class="secondary-color-text" href="#!"><i class="material-icons">chevron_right</i></a></li>
-        </ul>
-    </div>
-</div>
+</main>

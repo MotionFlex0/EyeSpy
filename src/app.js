@@ -6,7 +6,8 @@ const exphs = require("express-handlebars");
 const express = require("express");
 const http = require("http");
 const path = require("path");
-const socketio = require("socket.io")
+const socketio = require("socket.io");
+
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +32,12 @@ const { exit } = require("process");
     }
 })();
 
+//DEV-DEP
+const { setQueues, UI } = require("bull-board");
+setQueues(require("./workers/tools"));
+app.use("/admin/bull", UI);
+//END
+
 app.use(bodyParser.json())
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
@@ -42,7 +49,7 @@ app.set("view engine", "hbs");
 
 app.use("/dashboard", dashboard);
 app.use("/api/domains", require("./api/domains"));
-app.use("/api/job", require("./api/job"))
+app.use("/api/job", require("./api/job"));
 
 app.get("/", (req, res) => {
     const script = ["js/index.js"];

@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+const toolQueue = require("../workers/tools");
+
 const SubdomainSchema = new mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     subdomain: {
@@ -11,10 +13,6 @@ const SubdomainSchema = new mongoose.Schema({
     imagePath: {
         type: String,
         default:""
-    },
-    imaageRefreshJob: {
-        type: Number,
-        default: null
     },
     serviceProvider: {
         type: String,
@@ -34,15 +32,5 @@ const SubdomainSchema = new mongoose.Schema({
     lastError: String,
     lastStatusCode: Number
 });
-
-SubdomainSchema.methods.getActiveJobs = function() {
-    let activeJobs = await toolQueue.getJobs(["active", "delayed", "waiting"]);
-    return activeJobs.filter(j => (j.name == "ispy" || j.name == "sublist3r") && j.data.subdomainId == this._id);
-}
-
-SubdomainSchema.static.getActiveJobsForDomain = function(domain) {
-    let activeJobs = await toolQueue.getJobs(["active", "delayed", "waiting"]);
-    return activeJobs.filter(j => (j.name == "ispy" || j.name == "sublist3r") && j.data.rootDomain == domain._id);
-}
 
 module.exports = mongoose.model("Subdomain", SubdomainSchema);

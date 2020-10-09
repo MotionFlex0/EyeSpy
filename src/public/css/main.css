@@ -88,6 +88,10 @@ body {
     background-color:#b388ff
 }
 
+.btn:any-link {
+    background-color: #9e66ff;
+}
+
 .copyable-field > a {
     outline: none;
     position: absolute;

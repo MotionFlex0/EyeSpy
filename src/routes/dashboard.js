@@ -21,7 +21,7 @@ router.get("/domains", (req, res) => {
 
 router.get("/domains/:domainId/search", (req, res) => {
     const script = ["/js/dashboard/domain_overview.js"];
-    const css = ["/css/dashboard.css"];
+    const css = ["/css/dashboard.css", "/css/dashboard/overview.css"];
 
     const intOrDefault = (val, defaultVal) => isNaN(parseInt(val)) ? defaultVal : parseInt(val);
 
@@ -53,7 +53,7 @@ router.get("/domains/:domainId/search", (req, res) => {
                 subdomains = tempArr;
             }
 
-            console.log(domain)
+            //console.log(domain)
             res.render("dashboard/domain_overview", {
                 title: "Domain Overview",
                 count,

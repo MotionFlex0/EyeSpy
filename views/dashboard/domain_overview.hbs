@@ -2,6 +2,38 @@
 
 <main>
     <div class="container">
+        <ul id="filterBar" class="sidenav sidenav-fixed">
+            <li><h6 class="center-align">Filters</h6></li>
+            <li><div class="divider"></div></li>
+            <li><a class="subheader white-text">Connection Status</a></li>
+            <li class="center-align multi-box">
+                <label>
+                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <span>Success</span>
+                </label>
+                <label>
+                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <span>Failed</span>
+                </label>
+            </li>
+            <li><div class="divider"></div></li>
+            <li><a class="subheader white-text">Server Types</a></li>
+            <li class="center-align multi-box">
+                <label>
+                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <span>S3</span>
+                </label>
+                <label>
+                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <span>Heroku</span>
+                </label>
+                <label>
+                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <span>Other</span>
+                </label>
+            </li>
+            <li><a href="#!" class="white-text">Second Sidebar Link</a></li>
+        </ul>
         <div class="normal">
             <div class="row">
                 <div class="col s4">
@@ -9,7 +41,7 @@
                 </div>
                 <div class="col s4 offset-s4">
                     {{!-- <p>Last scan: 03/08/2020 5:30pm</p> --}}
-                    <p id="progressServerJob" class="" data-job-name="" data-progress="0"><b>Currently running iSpy: 100%</b></p>
+                    <p id="progressServerJob" class="hide" data-job-name="" data-progress="0"><b>Currently running DEMO: 100%</b></p>
                 </div>
             </div>
             <div class="row">
@@ -19,7 +51,7 @@
                 </div>
                 
                 <a id="scanSubdomain" class="col s2 offset-s1 waves-effect waves-light btn" href="#">Use Sublist3r</a>
-                <a id="iSpyAll" class="col s2 offset-s1 waves-effect waves-light btn" href="#">Use iSpy on all</a>   
+                <a id="iSpyAll" class="col s2 offset-s1 waves-effect waves-light btn " href="#">Use iSpy on all</a>   
                 {{!-- <a id="testButton" class="col s2 offset-s1 waves-effect waves-light btn modal-trigger" href="#">Use iSpy for this domain</a> --}}
             </div>
             <div class="row">
@@ -53,7 +85,7 @@
                             
                         </div>
                         <div class="card-action">
-                            <a class="" href="#">Update image</a>
+                            <a class="" href="#">More info</a>
                         </div>
                     </div>
                 </div>

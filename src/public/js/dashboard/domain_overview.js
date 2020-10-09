@@ -1,13 +1,13 @@
+const READABLE_JOB_NAMES = {
+    "ispy": "ISpy",
+    "ispy-bulk": "ISpy",
+    "sublist3r": "Sublist3r"
+};
+
 window.onload = async () => {
     M.AutoInit();
 
-    progress.showPreloader();
-    const initialPageContents = await api.requestNewPage(config.initialQuery, config.initialStart, config.count);
-    progress.hidePreloader();
-    
-    pagination.setMaxPage(config.maxPage = initialPageContents.maxPage);
-    pagination.updatePageNumber(config.initialPage);
-    card.updateCardsFromServerJson(initialPageContents);
+    await initPage();
 
     document.querySelector("#search").addEventListener("input", async (e) => {
         progress.showPreloader();
@@ -19,29 +19,26 @@ window.onload = async () => {
         pagination.updatePageNumber(1);
         card.updateCardsFromServerJson(contents);
         queryString.update(searchText, pagination.getCurrentStart(), config.count);
-
-        console.log("event fired");
     });
 
-    document.querySelector("#scanSubdomain").addEventListener("click", (ev) => {
-        const job = await fetch(`/api/domains/id/${config.domainId}/subsearch`).then(res => res.json());
-        job.
+    document.querySelector("#scanSubdomain").addEventListener("click", async (ev) => {
+        const job = await fetch(`/api/domains/id/${config.domainId}/run/subsearch`).then(res => res.json());
+        if (!job.success) {
+            console.error(job.message);
+            return;
+        }
 
-        progressServerJob.setJobName("Sublist3r");
-        const checkJobProgress = setInterval(async () => {
-            const r = await fetch(`/api/job/${job.jobId}/status`).then(x => x.json());
-            progressServerJob.setProgress(r.progress);
-            if (r.finished) {
-                clearInterval(interval);
-                resolve(r);
-            }
-            console.log(1)
-        }, 1000);
+        progressServerJob.autoUpdate(job.jobId, "Sublist3r");
     });
 
      document.querySelector("#iSpyAll").addEventListener("click", async (ev) => {
-        const job = await fetch(`/api/domains/id/${config.domainId}/ispy`).then(res => res.json());
-        console.log(job);
+        const job = await fetch(`/api/domains/id/${config.domainId}/run/ispy`).then(res => res.json());
+        if (!job.success) {
+            console.error(job.message);
+            return;
+        }
+
+        progressServerJob.autoUpdate(job.jobId, "ISpy");
     });
 
     document.querySelectorAll(".pagination > li.pli, li.pli_max, li.chevron_left, li.chevron_right").forEach(
@@ -53,6 +50,28 @@ window.onload = async () => {
     );
 
 
+}
+
+async function initPage() {
+    progress.showPreloader();
+    const initialPageContents = await api.requestNewPage(config.initialQuery, config.initialStart, config.count);
+    progress.hidePreloader();
+    
+    pagination.setMaxPage(config.maxPage = initialPageContents.maxPage);
+    pagination.updatePageNumber(config.initialPage);
+    card.updateCardsFromServerJson(initialPageContents);
+
+    if (initialPageContents.domain.jobs.length > 0)
+        progressServerJob.autoUpdate(initialPageContents.domain.jobs[0]); //TODO: add support for showing  multiple server jobs on a single display
+}
+
+async function refreshCurrentPage() {
+    progress.showPreloader();
+    const searchText = document.querySelector("#search").value;
+    const currentPage = pagination.getCurrentPage();
+    const contents = await api.requestNewPage(searchText, (currentPage-1)*config.count, config.count);
+    progress.hidePreloader();
+    card.updateCardsFromServerJson(contents);
 }
 
 async function paginationHandler(ev) {
@@ -85,7 +104,7 @@ async function refreshImageHandler(ev) {
         card.progressBar.setProgress(progressBar, 0);
         card.progressBar.setVisibility(progressBar, true);
         ev.srcElement.parentElement.previousElementSibling.children[0].src = whiteImage;
-        console.log("here")
+
         let jobResp = await new Promise(resolve => {
             const interval = setInterval(async () => {
                 const r = await fetch(`/api/job/${resp.jobId}/status`).then(x => x.json());
@@ -114,6 +133,9 @@ async function refreshImageHandler(ev) {
 }
 
 const api = {
+    getJobStatus: async function (jobId) {
+        return await fetch(`/api/job/${jobId}/status`).then(r => r.json());
+    },
     requestNewPage: async function(query, start, count) {
         const q = encodeURIComponent(query);
         const s = encodeURIComponent(start);
@@ -215,6 +237,25 @@ const progress = {
 }
 
 const progressServerJob = {
+    autoUpdate: async function(jobId, name) {
+        if (name == undefined)
+            name = await api.getJobStatus(jobId).then(j => j.name).then(n => n in READABLE_JOB_NAMES ? READABLE_JOB_NAMES[n] : n);   
+        
+        this.setJobName(name);
+        this.setProgress(0);
+        this.toggleVisibility(true);
+        toolButtons.toggleDisabled(true);
+        const checkJobProgress = setInterval(async () => {
+            const r = await api.getJobStatus(jobId);
+            this.setProgress(r.progress);
+            if (r.finished) {
+                clearInterval(checkJobProgress);
+                this.setProgress(100);
+                toolButtons.toggleDisabled(false);
+                await refreshCurrentPage();
+            }
+        }, 1000);
+    },
     getElement: function() {
         return document.querySelector("#progressServerJob");
     },
@@ -233,9 +274,7 @@ const progressServerJob = {
         const blue = gradient((MIN_PROGRESS_COLOR & 0xFF), (MAX_PROGRESS_COLOR & 0xFF));
 
         let newColor = ((red << 16) + (green << 8) + blue).toString(16);
-        console.log(parseInt(newColor, 16))
         newColor = "0".repeat(6 - newColor.length) + newColor;
-        console.log(this.getElement())
         const element = this.getElement();
         element.dataset.progress = progress;
         element.children[0].innerHTML = `Currently running ${element.dataset.jobName}: ${progress==100?"Completed!":progress+"%"}`;

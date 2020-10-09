@@ -5,6 +5,19 @@ const toolQueue = require("../workers/tools")
 const BulkJob = require("../models/bulk_job");
 
 //jobId = document id
+
+router.use("/:jobId", async (req, res, next) => {
+    const job = await toolQueue.getJob(req.params.jobId);
+    if (job == null) 
+        return res.status(404).json({
+            success: false,
+            message: "cannot find that job in queue"
+        });
+
+    res.locals.job = job;
+    next();
+})
+
 router.get("/:jobId/status", async (req, res) => {
     const job = await toolQueue.getJob(req.params.jobId);
     if (job != null) {
@@ -27,6 +40,7 @@ router.get("/:jobId/status", async (req, res) => {
             success: true,
             progress: progress,
             finished: isFinished,
+            name: job.name,
             ...data && {data},
             ...error && {error},
             gba: await job.toJSON()
@@ -38,6 +52,13 @@ router.get("/:jobId/status", async (req, res) => {
             message: "cannot find that job in queue"
         });
     }
+});
+
+router.delete("/:jobId", async (req, res) => {
+    await res.locals.job.moveToFailed({message: "job deleted using /api/:jobId"}, true);
+    res.json({
+        success: true
+    });
 });
 
 module.exports = router;

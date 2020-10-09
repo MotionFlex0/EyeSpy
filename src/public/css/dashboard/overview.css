@@ -1,0 +1,26 @@
+
+main {
+    padding-left: 30px;
+}
+
+#filterBar {
+    top: 64px;background-color:#363636;
+    box-shadow: none;
+    border-right: 1px !important;
+    border-right-style: solid !important;
+    border-right-color: white !important;
+}
+
+#filterBar > li > .subheader {
+    height: 40px;
+}
+
+#filterBar > li.multi-box > label:not(:last-child){ 
+    margin-right: 20px  !important;/*TODO: Change all px to rem*/
+}
+
+@media only screen and (max-width : 992px) {
+    header, main, footer {
+        padding-left: 0;
+    }
+}

@@ -6,10 +6,10 @@ const url = require("url");
 const { body, validationResult } = require("express-validator");
 
 const config = require("../config/prod");
-const BulkJob = require("../models/bulk_job");
 const Domain = require("../models/domain")
 const Subdomain = require("../models/subdomain");
 const toolQueue = require("../workers/tools");
+const queueQuery = require("../lib/queue_query");
 const domain = require("../models/domain");
 const e = require("express");
 
@@ -81,10 +81,8 @@ router.get("/all", (req, res) => {
 });
 
 router.use("/id/:domainId", async (req, res, next) => {
-    try {
-        res.locals.domain = await Domain.findById(req.params.domainId);     
-    }
-    catch (e) {
+    res.locals.domain = await Domain.findById(req.params.domainId);   
+    if (res.locals.domain == null) {
         return res.status(404).json({
             success: false,
             message: "cannot find domain with that id."   
@@ -94,26 +92,24 @@ router.use("/id/:domainId", async (req, res, next) => {
 });
 
 router.use("/id/:domainId/run/", async (req, res, next) =>  {
-    const jobs = domain.getActiveJobs();
+    const jobs = await queueQuery.getActiveDomainJobs(res.locals.domain);
+
     if (jobs.length > 0) {
         return res.status(400).json({
             success: false,
-            jobId: res.locals.domain.bulk_job_id,
-            jobName: (await toolQueue.getJob(res.locals.domain.bulk_job_id)).name,
-            message: `${domainId} already has a running job`,
+            jobs,
+            message: `${res.locals.domain._id} already has a running job`
         }); 
     }
     next();
 });
 
 router.use("/id/:domainId/s/:subdomainId", async (req, res, next) => {
-    try {
-        res.locals.subdomain = await Subdomain.findOne({
-            _id: req.params.subdomainId,
-            rootDomain: res.locals.domain
-        });
-    }
-    catch (e) {
+    res.locals.subdomain = await Subdomain.findOne({
+        _id: req.params.subdomainId,
+        rootDomain: res.locals.domain
+    });
+    if (res.locals.subdomain == null) {
         return res.status(404).json({
             success: false,
             message: "cannot find subdomain with that id"
@@ -123,12 +119,7 @@ router.use("/id/:domainId/s/:subdomainId", async (req, res, next) => {
 });
 
 router.get("/id/:domainId", async (req, res) => {
-    let activeJobs = domain.getActiveJobs();
-
-    res.json({
-        ...res.locals.domain, 
-        ...activeJobs.length>0 && {activeJobs}
-    });
+    res.json(await queueQuery.addActiveJobsToDomain(res.locals.domain));
 });
 
 //TODO: Remove the need for Domain.find, and grab it from res.locals.domain instead
@@ -169,12 +160,12 @@ router.delete("/id/:domainId", (req, res) => {
 
 //TODO: MAYBE ADDA BULK JOB, JOB NAME AND HAVE IT ADD ALL THE OTHER JOBS
 router.get("/id/:domainId/run/ispy", async (req, res) => {
-    if (res.locals.domain.bulk_job_id != null) {
+    const bulkJobs = await queueQuery.getActiveDomainJobs(res.locals.domain);
+    if (bulkJobs.length > 0) {
         return res.json({
             success: false,
-            jobId: res.locals.domain.bulk_job_id,
-            jobName: (await toolQueue.getJob(res.locals.domain.bulk_job_id)).name,
             message: `${domainId} already has a running job`,
+            bulkJobs
         });  
     }
 
@@ -222,9 +213,9 @@ router.get("/id/:domainId/subdomains", async (req, res) =>  {
     const useRegex = req.query.regex == undefined ? false : req.query.regex == 1;
     const start = intOrDefault(req.query.start, 0);
     const count = intOrDefault(req.query.count, config.website.SUBDOMAINS_PER_PAGE);
+    
 
-
-    const subdomains = await Subdomain.find({
+    let subdomains = await Subdomain.find({
         rootDomain: res.locals.domain, subdomain: (new RegExp(query, "i"))
     })
     .sort({"subdomain":1})
@@ -237,25 +228,21 @@ router.get("/id/:domainId/subdomains", async (req, res) =>  {
     })
     .count()/count);
     
-    const bulkImageJob = res.locals.domain.bulk_image_job;
-    const activeBulkJobs = domain.getActiveJobs();
+    const domain = await queueQuery.addActiveJobsToDomain(res.locals.domain);
+    subdomains = await queueQuery.addActiveJobsToSubdomains(subdomains);
 
     res.json({
-        domain: { 
-            ...res.locals.domain,
-            ...activeBulkJobs>0 && {activeBulkJobs}
-        },
+        domain,
         maxPage,
         subdomains,
-        timestamp: Date.now(),
-        ...bulkImageJob && {bulkImageJob}
+        timestamp: Date.now()
     });
 });
 
 //TODO: re-write this function. checking domainId is no longer needed.
 //submit sublist3r job for a given domainId
 router.get("/id/:domainId/run/subsearch", async (req, res) => {
-    const newJob = await toolQueue.add("sublist3r", {hostname: domain.hostname, rootDomain: domainId});  //TODO: check if it actually been added
+    const newJob = await toolQueue.add("sublist3r", {hostname: res.locals.domain.hostname, domainId: res.locals.domain._id});  //TODO: check if it actually been added
     if (newJob != null) {  //not sure if this ever happens, as the function isn't .add(..) function isn't properly documented
         return res.json({
             success: true,
@@ -270,10 +257,10 @@ router.get("/id/:domainId/run/subsearch", async (req, res) => {
     }
 });
 
-router.get("/id/:domainId/s/:subdomainId", (req, res) => {
+router.get("/id/:domainId/s/:subdomainId", async (req, res) => {
     res.json({
         success: true,
-        subdomain: res.locals.subdomain
+        subdomain: await queueQuery.addActiveJobsToSubdomain(res.locals.subdomain)
     });
 });
 

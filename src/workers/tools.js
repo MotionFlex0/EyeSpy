@@ -8,121 +8,133 @@ const path  = require("path")
 const uuid = require("uuid");
 
 const Subdomain = require("../models/subdomain");
-const { error } = require("console");
-const subdomain = require("../models/subdomain");
-const { Domain } = require("domain");
+const Domain = require("../models/domain");
 const toolQueue = new Bull("queue");
 
 (async () => {
-    const browser = await puppeteer.launch({headless: false});
+    const browser = await puppeteer.launch({defaultViewport: { width:1270 , height: 720 } });
 
     toolQueue.on("stalled", (job) => { 
         console.error(`job with id ${job.id} and name ${job.name} has stalled`);
     });
 
-    toolQueue.on("")
-
     toolQueue.process("sublist3r", (job, done) => {
         const hostname = job.data.hostname;
         const outputFile = path.join(config.tempPath, `${uuid.v4()}.txt`);
-        const process = childProcess.spawnSync("python", ["./tools/sublist3r/sublist3r.py",
+        const process = childProcess.spawn("python", ["./tools/sublist3r/sublist3r.py",
                                             "-d",
                                             hostname,
                                             "-o",
                                             outputFile
                                         ]);
-        console.log(fs.existsSync(outputFile));
-        if (fs.existsSync(outputFile)) {
-            fs.readFileSync(outputFile).toString().split("\r\r\n").forEach(async subdomain => { //fixes issue with sublist3r using 2 CR in output file
-               if (subdomain.trim() == "")
-                    return;
-               
-                const found = await Subdomain.findOne({subdomain});
-                if (found == null) {
-                    (new Subdomain({
-                        _id: mongoose.Types.ObjectId(),
-                        subdomain,
-                        rootDomain: job.data.rootDomain
-                    })).save();
-                    
-                    //console.log(`saving new domain {${subdomain}} with rootDomain {${job.data.rootDomain}}`);
-                }
-            });
-        }
- 
-        console.log(`job ${job.id} has finished.`);
-            done(process.error);
+
+        process.on("exit", async code => { 
+            console.log(fs.existsSync(outputFile));
+            if (fs.existsSync(outputFile)) {
+                fs.readFileSync(outputFile).toString().split("\r\r\n").forEach(async subdomain => { //fixes issue with sublist3r using 2 CR in output file
+                   if (subdomain.trim() == "")
+                        return;
+                   
+                    const found = await Subdomain.findOne({subdomain});
+                    if (found == null) {
+                        (new Subdomain({
+                            _id: mongoose.Types.ObjectId(),
+                            subdomain,
+                            rootDomain: job.data.domainId
+                        })).save();
+                        
+                        //console.log(`saving new domain {${subdomain}} with domainId {${job.data.domainId}}`);
+                    }
+                });
+                done(null);
+            }
+            else {
+                console.log(`could not find any subdomains for ${hostname}`);
+                console.log(`input file: ${process}`)
+                console.log(`output file: ${outputFile}`);
+                done(1);
+            }
+            console.log(`job ${job.id} has finished.`); 
+        });
     }); 
 
-    toolQueue.process("ispy", 10, async (job, done) => {
+    toolQueue.process("ispy", 3, async (job) => {
         const subdomain = await Subdomain.findById(job.data.subdomainId);
+
+        let page = null;
         try {
             let progressCount = 0; 
             const progressCalls = 6;
 
-            const page = await browser.newPage();
+            
+            page = await browser.newPage();
             job.progress((++progressCount/progressCalls)*100);
             
             let fullImagePath = path.join(config.systemRootImagePath, subdomain.rootDomain.toString());
             if (!fs.existsSync(fullImagePath))
-                fs.mkdirSync(fullImagePath);
+            fs.mkdirSync(fullImagePath);
             job.progress((++progressCount/progressCalls)*100);
-    
-            fullImagePath = path.join(fullImagePath, `${subdomain.subdomain}.png`);
-    
+            
+            fullImagePath = path.join(fullImagePath, `${subdomain.subdomain}.jpeg`);
+            
             const resp = await page.goto(`${subdomain.tls_supported?"https":"http"}://${subdomain.subdomain}`, { timeout: 10000 });
             job.progress((++progressCount/progressCalls)*100);
-            await page.screenshot({path: fullImagePath});
+            await page.screenshot({path: fullImagePath, type:"jpeg"});
             job.progress((++progressCount/progressCalls)*100);
-            await page.close();
             
             subdomain.lastConnSuccessful = true;
             subdomain.lastStatusCode = resp.status();
-            subdomain.imagePath = path.join(subdomain.rootDomain.toString(), `${subdomain.subdomain}.png`);
+            subdomain.imagePath = path.join(subdomain.rootDomain.toString(), `${subdomain.subdomain}.jpeg`);
             await subdomain.save();
             job.progress((++progressCount/progressCalls)*100);
-            console.log("updated image");
-            done(null, subdomain.imagePath);
+            job.progress(100);
+
+            await page.close();
+            return Promise.resolve(subdomain.imagePath);
         }
         catch (e){
-            console.log("failed....");
+            //console.log("failed....");
+            if (page != null)
+                await page.close();
+
             console.log(e.message);
             subdomain.lastError = e.message;
             subdomain.lastConnSuccessful = false;
             subdomain.save();
-            done(e.message);
-        }
-        finally {
-            job.progress = 100;
+            job.progress(100);
+            return Promise.reject(e.message);
         }
     });
 
+    toolQueue.process("infodump", async (job, done) => {
+        job.progress(100);
+        done(null);
+    });
+
     //TODO: Create a single "bulk" job and pass the name for the specific job, as part of the data.
-    toolQueue.process("ispy-bulk", async (job, done) => {
-        const domain = await Domain.findById(job.data.domainId);
-        const subdomains = await Subdomain.find({rootDomain: job.data.domainId}).limit(5).exec();
+    toolQueue.process("ispy-bulk", async (job) => {
+        const subdomains = await Subdomain.find({rootDomain: job.data.domainId});
 
-        domain.bulk_job_id = job.id;
-
-        const jobs = await Promise.all(subdomains.map(async s => {
+        let jobs = await Promise.all(subdomains.map(async s => {
             return await toolQueue.add("ispy", {subdomainId: s._id});
         }));
 
         const jobsCount = jobs.length;
         let jobsFinished = 0;
         while (jobsFinished < jobsCount) {
-            jobs = jobs.filter(async job => !(await job.isCompleted() || await job.isFailed()));
-            jobsFinished += jobsCount - jobs.length;
+            const jobsStatus = await Promise.all(jobs.map(async j=> !(await j.isCompleted() || await j.isFailed())));
+            jobs = jobs.filter((j, i) => jobsStatus[i]);
+            
+            jobsFinished += jobsCount - (jobs.length + jobsFinished);
             job.progress((jobsFinished/jobsCount)*100);
-            await (new Promise(resolve => setTimeout(resolve, 500))); // crude sleep
+            //console.log(`jobsFinished: ${jobsFinished} | jobsCount: ${jobsCount} | jobs.length: ${jobs.length}`);
+            //console.log(`jobs[0] comp: ${await jobs[0].isCompleted()} | jobs[0] fail: ${await jobs[0].isFailed()} | combo: ${!(await jobs[0].isCompleted() || await jobs[0].isFailed())}` );
+            await (new Promise(resolve => setTimeout(resolve, 1000))); // crude sleep
         }
-
-        
         // await new Promise(resolve => setTimeout(resolve, 5000));
-        // console.log("job done");
-
-        domain.bulk_job_id = null;
-        done(null, true);
+        console.log(`${job.name} done`);
+        job.progress(100);
+        return Promise.resolve(true);
     });
 })();
 
