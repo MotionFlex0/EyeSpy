@@ -10,15 +10,21 @@ window.onload = async () => {
     await initPage();
 
     document.querySelector("#search").addEventListener("input", async (e) => {
+        if (debounce.check())
+            return;
+
+        await debounce.wait();
+        
         progress.showPreloader();
         const searchText = document.querySelector("#search").value;
         const contents = await api.requestNewPage(searchText, 0, config.count);
         progress.hidePreloader();
-
+        
         pagination.setMaxPage(config.maxPage = contents.maxPage);
         pagination.updatePageNumber(1);
         card.updateCardsFromServerJson(contents);
         queryString.update(searchText, pagination.getCurrentStart(), config.count);
+        debounce.unlock();
     });
 
     document.querySelector("#scanSubdomain").addEventListener("click", async (ev) => {
@@ -48,6 +54,8 @@ window.onload = async () => {
     document.querySelectorAll(".refresh_image").forEach(
         e => e.addEventListener("click", refreshImageHandler)
     );
+
+    // document.querySelectorAll(".filter-checkbox").forEach(e => e.addEventListener("click"))
 
 
 }
@@ -201,6 +209,7 @@ const card = {
 
 const debounce = {
     check: function() {
+        this.reset = true;
         return this.locked == undefined ? false : this.locked;
     },
     lock: function() {
@@ -208,6 +217,13 @@ const debounce = {
     },
     unlock: function() {
         this.locked = false;
+    },
+    wait: async function() {
+        this.lock();
+        do {
+            this.reset = false;
+            await new Promise(resolve => setTimeout(resolve, 400)); 
+        } while(this.reset);
     }
 }
 

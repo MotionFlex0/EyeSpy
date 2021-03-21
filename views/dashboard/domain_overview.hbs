@@ -2,38 +2,38 @@
 
 <main>
     <div class="container">
-        <ul id="filterBar" class="sidenav sidenav-fixed">
+        {{!-- <ul id="filterBar" class="sidenav sidenav-fixed">
             <li><h6 class="center-align">Filters</h6></li>
             <li><div class="divider"></div></li>
             <li><a class="subheader white-text">Connection Status</a></li>
-            <li class="center-align multi-box">
+            <li class="center-align multi-box" data-filter="connstatus">
                 <label>
-                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <input type="checkbox" class="filled-in filter-checkbox" checked="checked" />
                     <span>Success</span>
                 </label>
                 <label>
-                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <input type="checkbox" class="filled-in filter-checkbox" checked="checked" />
                     <span>Failed</span>
                 </label>
             </li>
             <li><div class="divider"></div></li>
-            <li><a class="subheader white-text">Server Types</a></li>
-            <li class="center-align multi-box">
+            <li><a class="subheader white-text">Server Type</a></li>
+            <li class="center-align multi-box" data-filter="svrtype">
                 <label>
-                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <input type="checkbox" class="filled-in filter-checkbox" checked="checked" />
                     <span>S3</span>
                 </label>
                 <label>
-                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <input type="checkbox" class="filled-in filter-checkbox" checked="checked" />
                     <span>Heroku</span>
                 </label>
                 <label>
-                    <input type="checkbox" class="filled-in" checked="checked" />
+                    <input type="checkbox" class="filled-in filter-checkbox" checked="checked" />
                     <span>Other</span>
                 </label>
             </li>
             <li><a href="#!" class="white-text">Second Sidebar Link</a></li>
-        </ul>
+        </ul> --}}
         <div class="normal">
             <div class="row">
                 <div class="col s4">
@@ -50,8 +50,21 @@
                     <label for="search">Search Subdomains</label>
                 </div>
                 
-                <a id="scanSubdomain" class="col s2 offset-s1 waves-effect waves-light btn" href="#">Use Sublist3r</a>
-                <a id="iSpyAll" class="col s2 offset-s1 waves-effect waves-light btn " href="#">Use iSpy on all</a>   
+                {{!-- <a id="scanSubdomain" class="col s2 offset-s1 waves-effect waves-light btn" href="#">Use Sublist3r</a>
+                <a id="iSpyAll" class="col s2 offset-s1 waves-effect waves-light btn " href="#">Use iSpy on all</a>  --}}
+                {{!-- <a class='col s2 offset-s1 dropdown-trigger btn' href='#' data-target='task_dropdown'>Drop Me!</a> --}}
+
+                <div class="input-field col s2 offset-s1">
+                    <select>
+                        <option value="" disabled selected>Choose your option</option>
+                        <option value="1">Sublist3r</option>
+                        <option value="2">iSpy on all</option>
+                        <option value="3">Option 3</option>
+                    </select>
+                    <label>Background Task</label>
+                </div>
+                <a id="executeTask" class="col s2 offset-s1 waves-effect waves-light btn " href="#">Execute Task</a> 
+                </ul>  
                 {{!-- <a id="testButton" class="col s2 offset-s1 waves-effect waves-light btn modal-trigger" href="#">Use iSpy for this domain</a> --}}
             </div>
             <div class="row">

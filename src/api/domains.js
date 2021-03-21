@@ -213,7 +213,7 @@ router.get("/id/:domainId/subdomains", async (req, res) =>  {
     const useRegex = req.query.regex == undefined ? false : req.query.regex == 1;
     const start = intOrDefault(req.query.start, 0);
     const count = intOrDefault(req.query.count, config.website.SUBDOMAINS_PER_PAGE);
-    
+     
 
     let subdomains = await Subdomain.find({
         rootDomain: res.locals.domain, subdomain: (new RegExp(query, "i"))
