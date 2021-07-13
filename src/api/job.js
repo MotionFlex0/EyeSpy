@@ -38,12 +38,11 @@ router.get("/:jobId/status", async (req, res) => {
 
         res.json({
             success: true,
-            progress: progress,
+            progress: progress.toFixed(2), // toFixed is not super accurate but it should be sufficient
             finished: isFinished,
             name: job.name,
             ...data && {data},
-            ...error && {error},
-            gba: await job.toJSON()
+            ...error && {error}
         });
     }
     else {
