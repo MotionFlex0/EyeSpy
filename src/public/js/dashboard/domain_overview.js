@@ -27,24 +27,24 @@ window.onload = async () => {
         debounce.unlock();
     });
 
-    document.querySelector("#scanSubdomain").addEventListener("click", async (ev) => {
-        const job = await fetch(`/api/domains/id/${config.domainId}/run/subsearch`).then(res => res.json());
-        if (!job.success) {
-            console.error(job.message);
-            return;
+    document.querySelector("#executeTask").addEventListener("click", async () => {
+        const taskSelect = document.querySelector("#taskSelect");
+        const selectedIndex = taskSelect.selectedIndex;
+
+        let job = null;
+        if (taskSelect[selectedIndex].value == "Sublist3r")
+            job = await fetch(`/api/domains/id/${config.domainId}/run/subsearch`).then(res => res.json());
+        else if (taskSelect[selectedIndex].value == "ISpy")
+            job = await fetch(`/api/domains/id/${config.domainId}/run/ispy`).then(res => res.json());
+
+        if (job != null) {
+            if (!job.success) {
+                console.error(job.message);
+                return;
+            }
+
+            progressServerJob.autoUpdate(job.jobId, taskSelect[selectedIndex].value);
         }
-
-        progressServerJob.autoUpdate(job.jobId, "Sublist3r");
-    });
-
-     document.querySelector("#iSpyAll").addEventListener("click", async (ev) => {
-        const job = await fetch(`/api/domains/id/${config.domainId}/run/ispy`).then(res => res.json());
-        if (!job.success) {
-            console.error(job.message);
-            return;
-        }
-
-        progressServerJob.autoUpdate(job.jobId, "ISpy");
     });
 
     document.querySelectorAll(".pagination > li.pli, li.pli_max, li.chevron_left, li.chevron_right").forEach(
@@ -154,8 +154,9 @@ const api = {
 
 const toolButtons = {
     toggleDisabled: function(disable) {
-        document.querySelector("#scanSubdomain").classList.toggle("disabled", disable);
-        document.querySelector("#iSpyAll").classList.toggle("disabled", disable);
+        // document.querySelector("#scanSubdomain").classList.toggle("disabled", disable);
+        // document.querySelector("#iSpyAll").classList.toggle("disabled", disable);
+        document.querySelector("#executeTask").classList.toggle("disabled", disable);
     }
 }
 
