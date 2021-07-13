@@ -4,3 +4,11 @@
  ### Current tools
  * Sublist3r - A tool created by aboul3la for scanning the internet for subdomains, available at (https://github.com/aboul3la/Sublist3r).
  * ISpy - A tool for gathering screenshots of subdomains automatically with per-(sub)domain capture or bulk capture.
+
+## Requirements
+* MongoDB
+* Node
+* Redis server
+* Python 2 or 3 (required for Sublist3r)
+
+
