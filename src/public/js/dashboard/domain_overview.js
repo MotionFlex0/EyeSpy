@@ -80,6 +80,7 @@ async function refreshCurrentPage() {
     const contents = await api.requestNewPage(searchText, (currentPage-1)*config.count, config.count);
     progress.hidePreloader();
     card.updateCardsFromServerJson(contents);
+    console.log("scrollingElement.scrollTop");
 }
 
 async function paginationHandler(ev) {
@@ -90,6 +91,8 @@ async function paginationHandler(ev) {
     else 
         pagination.updatePageNumber(ev.srcElement.innerHTML);
 
+    const currentScrollTop = document.scrollingElement.scrollTop;
+
     progress.showPreloader();
     const searchText = document.querySelector("#search").value;
     const newPage = pagination.getCurrentPage();
@@ -97,6 +100,9 @@ async function paginationHandler(ev) {
     progress.hidePreloader();
     card.updateCardsFromServerJson(contents);
     queryString.update(searchText, pagination.getCurrentStart(), config.count);
+
+    document.scrollingElement.scrollTop = currentScrollTop;
+
 }
 
 async function refreshImageHandler(ev) {
