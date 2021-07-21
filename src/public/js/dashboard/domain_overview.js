@@ -1,12 +1,8 @@
-const READABLE_JOB_NAMES = {
-    "ispy": "ISpy",
-    "ispy-bulk": "ISpy",
-    "sublist3r": "Sublist3r"
-};
+const config = require("../../../config/prod");
 
 window.onload = async () => {
     M.AutoInit();
-
+    
     await initPage();
 
     document.querySelector("#search").addEventListener("input", async (e) => {
@@ -262,7 +258,7 @@ const progress = {
 const progressServerJob = {
     autoUpdate: async function(jobId, name) {
         if (name == undefined)
-            name = await api.getJobStatus(jobId).then(j => j.name).then(n => n in READABLE_JOB_NAMES ? READABLE_JOB_NAMES[n] : n);   
+            name = await api.getJobStatus(jobId).then(j => j.name).then(n => n in config.readableJobNames ? config.readableJobNames[n] : n);   
         
         this.setJobName(name);
         this.setProgress(0);
