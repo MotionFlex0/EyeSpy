@@ -11,6 +11,7 @@ const homedir = os.homedir();
 
 config.website = require("./core/website");
 config.database = require("./core/database");
+config.job = require("./core/job");
 config.tempPath = fs.mkdtempSync(path.join(os.tmpdir(), "sdb-"));
 
 //#region config -- DO NOT EDIT ABOVE THIS LINE 
