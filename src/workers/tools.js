@@ -1,10 +1,11 @@
 const Bull = require("bull");
 const childProcess = require("child_process");
 const config = require("../config/prod");
-const fs = require("fs")
-const mongoose = require("mongoose")
+const dns = require("dns");
+const fs = require("fs");
+const mongoose = require("mongoose");
 const puppeteer = require("puppeteer");
-const path  = require("path")
+const path  = require("path");
 const uuid = require("uuid");
 
 const Subdomain = require("../models/subdomain");
@@ -106,9 +107,15 @@ const toolQueue = new Bull("queue");
         }
     });
 
-    toolQueue.process("infodump", async (job, done) => {
-        job.progress(100);
-        done(null);
+    toolQueue.process("infodump", async (job) => {
+        const subdomain = await Subdomain.findById(job.data.subdomainId);
+    
+        //TODO: 
+        // Get DNS A or CNAME recursively
+        // Check if Heroku, AWS (S3), Wordpress etc...
+        // Check if vulnerable to subdomain takeover
+        dns.resolveAny(subdomain)
+
     });
 
     //TODO: Create a single "bulk" job and pass the name for the specific job, as part of the data.
@@ -122,7 +129,7 @@ const toolQueue = new Bull("queue");
         const jobsCount = jobs.length;
         let jobsFinished = 0;
         while (jobsFinished < jobsCount) {
-            const jobsStatus = await Promise.all(jobs.map(async j=> !(await j.isCompleted() || await j.isFailed())));
+            const jobsStatus = await Promise.all(jobs.map(async j => !(await j.isCompleted() || await j.isFailed())));
             jobs = jobs.filter((j, i) => jobsStatus[i]);
             
             jobsFinished += jobsCount - (jobs.length + jobsFinished);
@@ -135,6 +142,17 @@ const toolQueue = new Bull("queue");
         console.log(`${job.name} done`);
         job.progress(100);
         return Promise.resolve(true);
+    });
+
+    toolQueue.process("infodump-bulks", async (job, done) => {
+        const subdomains = await Subdomain.find({rootDomain: job.data.domainId});
+
+        let jobs = await Promise.all(subdomains.map(async s => {
+            return await toolQueue.add("infodump", {subdomainId: s._id});
+        }));
+
+        job.progress(100);
+        done(null);
     });
 })();
 
