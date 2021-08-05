@@ -205,6 +205,16 @@ router.get("/id/:domainId/run/ispy", async (req, res) => {
     // bulkJob.save();
 });
 
+router.get("/id/:domainId/run/infodump", async (req, res) => {
+    const domainId = res.locals.domain._id;
+    const newJob = await toolQueue.add("infodump-bulk", { domainId });
+
+    return res.json({
+        success: true,
+        jobId: newJob.id
+    });
+});
+
 //subdomain filter for a given domainId
 router.get("/id/:domainId/subdomains", async (req, res) =>  {
     const intOrDefault = (val, defaultVal) => isNaN(parseInt(val)) ? defaultVal : parseInt(val);
