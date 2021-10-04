@@ -67,7 +67,8 @@ router.get("/domains/:domainId/search", (req, res) => {
                 script,
                 css,
                 defaultImagePath: config.website.defaultCardImagePath,
-                rootImagePath: config.website.rootImagePath
+                rootImagePath: config.website.rootImagePath,
+                readableJobNames: config.job.readableJobNames
             });
         });
     })
