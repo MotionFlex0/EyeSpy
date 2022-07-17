@@ -33,9 +33,9 @@ const { exit } = require("process");
 })();
 
 //DEV-DEP
-const { setQueues, UI } = require("bull-board");
-setQueues(require("./workers/tools"));
-app.use("/admin/bull", UI);
+// const { setQueues, UI } = require("bull-board");
+// setQueues(require("./workers/tools"));
+// app.use("/admin/bull", UI);
 //END
 
 app.use(bodyParser.json())
