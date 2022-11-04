@@ -32,6 +32,8 @@ window.onload = async () => {
             job = await fetch(`/api/domains/id/${config.domainId}/run/subsearch`).then(res => res.json());
         else if (taskSelect[selectedIndex].value == "ISpy")
             job = await fetch(`/api/domains/id/${config.domainId}/run/ispy`).then(res => res.json());
+        else if (taskSelect[selectedIndex].value == "Infodump")
+            job = await fetch(``).then(res => res.json());
 
         if (job != null) {
             if (!job.success) {
@@ -138,6 +140,8 @@ async function refreshImageHandler(ev) {
         else
             ev.srcElement.parentElement.previousElementSibling.children[0].src = config.rootImagePath + jobResp.data;
         card.progressBar.setVisibility(progressBar, false);
+
+        // pagination.setMaxPage(config.maxPage = initialPageContents.maxPage);
     }
     ev.srcElement.parentElement.classList.remove("hide");
 }
